@@ -15,7 +15,7 @@ import { RealTimeResults } from './RealTimeResults'
 import { Button } from '@/app/components/ui/button'
 import Image from 'next/image'
 
-export function ExerciseView() {
+export default function ExerciseView() {
   const webcamRef = useRef<Webcam>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [detector, setDetector] = useState<poseDetection.PoseDetector | null>(
@@ -25,6 +25,7 @@ export function ExerciseView() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [screenshot, setScreenshot] = useState<string | null>(null)
+  const [isBrowserReady, setIsBrowserReady] = useState(false)
 
   const drawPose = useCallback(
     (poses: poseDetection.Pose[]) => {
@@ -154,6 +155,10 @@ export function ExerciseView() {
     }
   }, [])
 
+  useEffect(() => {
+    setIsBrowserReady(true)
+  }, [])
+
   const captureScreenshot = useCallback(() => {
     if (webcamRef.current) {
       const imageSrc = webcamRef.current.getScreenshot()
@@ -163,62 +168,68 @@ export function ExerciseView() {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-      <div className="space-y-8">
-        <Card>
-          <CardHeader>
-            <CardTitle>Camera View</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="relative">
-              {isLoading && <p>Loading camera...</p>}
-              {error && <p className="text-red-500">Error: {error}</p>}
-              <Webcam
-                ref={webcamRef}
-                mirrored
-                className="w-full"
-                audio={false}
-                screenshotFormat="image/jpeg"
-                videoConstraints={{
-                  facingMode: 'user',
-                }}
-                onUserMedia={() => {
-                  console.log('Camera access granted')
-                  setIsLoading(false)
-                }}
-                onUserMediaError={(err) => {
-                  console.error('Camera error:', err)
-                  setError('Failed to access camera')
-                  setIsLoading(false)
-                }}
-              />
-              <canvas
-                ref={canvasRef}
-                className="absolute top-0 left-0 w-full h-full"
-              />
-            </div>
-            <Button onClick={captureScreenshot} className="mt-4">
-              Capture Screenshot
-            </Button>
-          </CardContent>
-        </Card>
-        {screenshot && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Captured Screenshot</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Image
-                src={screenshot}
-                alt="Captured screenshot"
-                width={640}
-                height={480}
-                className="w-full"
-              />
-            </CardContent>
-          </Card>
-        )}
-      </div>
-      <RealTimeResults poses={poses} />
+      {isBrowserReady ? (
+        <>
+          <div className="space-y-8">
+            <Card>
+              <CardHeader>
+                <CardTitle>Camera View</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="relative">
+                  {isLoading && <p>Loading camera...</p>}
+                  {error && <p className="text-red-500">Error: {error}</p>}
+                  <Webcam
+                    ref={webcamRef}
+                    mirrored
+                    className="w-full"
+                    audio={false}
+                    screenshotFormat="image/jpeg"
+                    videoConstraints={{
+                      facingMode: 'user',
+                    }}
+                    onUserMedia={() => {
+                      console.log('Camera access granted')
+                      setIsLoading(false)
+                    }}
+                    onUserMediaError={(err) => {
+                      console.error('Camera error:', err)
+                      setError('Failed to access camera')
+                      setIsLoading(false)
+                    }}
+                  />
+                  <canvas
+                    ref={canvasRef}
+                    className="absolute top-0 left-0 w-full h-full"
+                  />
+                </div>
+                <Button onClick={captureScreenshot} className="mt-4">
+                  Capture Screenshot
+                </Button>
+              </CardContent>
+            </Card>
+            {screenshot && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Captured Screenshot</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Image
+                    src={screenshot}
+                    alt="Captured screenshot"
+                    width={640}
+                    height={480}
+                    className="w-full"
+                  />
+                </CardContent>
+              </Card>
+            )}
+          </div>
+          <RealTimeResults poses={poses} />
+        </>
+      ) : (
+        <p>Loading...</p>
+      )}
     </div>
   )
 }

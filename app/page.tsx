@@ -1,4 +1,8 @@
-import { ExerciseView } from '@/app/components/ExerciseView'
+import dynamic from 'next/dynamic'
+
+const ExerciseView = dynamic(() => import('@/app/components/ExerciseView'), {
+  ssr: false,
+})
 
 export default function Home() {
   return (
