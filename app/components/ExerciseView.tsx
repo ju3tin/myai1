@@ -39,6 +39,11 @@ export function ExerciseView() {
         ctx.canvas.height = video.videoHeight
       }
 
+      // Flip the context horizontally
+      ctx.save()
+      ctx.scale(-1, 1)
+      ctx.translate(-ctx.canvas.width, 0)
+
       poses[0].keypoints.forEach((keypoint) => {
         if (keypoint.score && keypoint.score > 0.3) {
           // Draw keypoint
@@ -47,10 +52,13 @@ export function ExerciseView() {
           ctx.fillStyle = 'red'
           ctx.fill()
 
-          // Draw keypoint name
+          // Draw keypoint name (need to flip text back)
+          ctx.save()
+          ctx.scale(-1, 1)
           ctx.font = '12px Arial'
           ctx.fillStyle = 'white'
-          ctx.fillText(keypoint.name, keypoint.x + 5, keypoint.y - 5)
+          ctx.fillText(keypoint.name, -keypoint.x + 5, keypoint.y - 5)
+          ctx.restore()
         }
       })
 
@@ -82,6 +90,9 @@ export function ExerciseView() {
           ctx.stroke()
         }
       })
+
+      // Restore the context
+      ctx.restore()
     },
     [webcamRef]
   )
@@ -90,7 +101,7 @@ export function ExerciseView() {
     async function initializeDetector() {
       await tf.ready()
       const detectorConfig = {
-        modelType: poseDetection.movenet.modelType.SINGLEPOSE_LIGHTNING,
+        modelType: poseDetection.movenet.modelType.SINGLEPOSE_THUNDER,
         runtime: 'tfjs-webgl',
       }
       const detector = await poseDetection.createDetector(
@@ -150,8 +161,6 @@ export function ExerciseView() {
                 audio={false}
                 screenshotFormat="image/jpeg"
                 videoConstraints={{
-                  width: 720,
-                  height: 480,
                   facingMode: 'user',
                 }}
                 onUserMedia={() => {
