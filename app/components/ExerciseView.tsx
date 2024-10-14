@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import Webcam from 'react-webcam'
 import * as poseDetection from '@tensorflow-models/pose-detection'
 import * as tf from '@tensorflow/tfjs-core'
@@ -11,29 +11,8 @@ import {
   CardHeader,
   CardTitle,
 } from '@/app/components/ui/card'
-import Image from 'next/image'
 import { RealTimeResults } from './RealTimeResults'
-
-// Memoized TargetPoseImage component
-const TargetPoseImage = React.memo(function TargetPoseImage() {
-  return (
-    <div className="relative w-full aspect-video bg-gray-100 flex items-center justify-center">
-      <Image
-        src="/placeholder-pose.avif"
-        alt="Target pose"
-        fill
-        sizes="(max-width: 768px) 100vw, 50vw"
-        style={{ objectFit: 'contain' }}
-        priority
-        onError={(e) => {
-          e.currentTarget.style.display = 'none'
-          e.currentTarget.nextElementSibling?.classList.remove('hidden')
-        }}
-      />
-      <p className="text-gray-500 hidden">No target pose image available</p>
-    </div>
-  )
-})
+import { TargetPoseImage } from './TargetPoseImage'
 
 export function ExerciseView() {
   const webcamRef = useRef<Webcam>(null)
@@ -45,20 +24,67 @@ export function ExerciseView() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const drawPose = useCallback((poses: poseDetection.Pose[]) => {
-    const ctx = canvasRef.current?.getContext('2d')
-    if (ctx && poses.length > 0) {
+  const drawPose = useCallback(
+    (poses: poseDetection.Pose[]) => {
+      const ctx = canvasRef.current?.getContext('2d')
+      if (!ctx || poses.length === 0) return
+
+      // Clear the canvas
       ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
+
+      // Set canvas size to match video
+      const video = webcamRef.current?.video
+      if (video) {
+        ctx.canvas.width = video.videoWidth
+        ctx.canvas.height = video.videoHeight
+      }
+
       poses[0].keypoints.forEach((keypoint) => {
         if (keypoint.score && keypoint.score > 0.3) {
+          // Draw keypoint
           ctx.beginPath()
           ctx.arc(keypoint.x, keypoint.y, 5, 0, 2 * Math.PI)
           ctx.fillStyle = 'red'
           ctx.fill()
+
+          // Draw keypoint name
+          ctx.font = '12px Arial'
+          ctx.fillStyle = 'white'
+          ctx.fillText(keypoint.name, keypoint.x + 5, keypoint.y - 5)
         }
       })
-    }
-  }, [])
+
+      // Draw skeleton
+      const skeleton = [
+        ['left_shoulder', 'right_shoulder'],
+        ['left_shoulder', 'left_elbow'],
+        ['right_shoulder', 'right_elbow'],
+        ['left_elbow', 'left_wrist'],
+        ['right_elbow', 'right_wrist'],
+        ['left_shoulder', 'left_hip'],
+        ['right_shoulder', 'right_hip'],
+        ['left_hip', 'right_hip'],
+        ['left_hip', 'left_knee'],
+        ['right_hip', 'right_knee'],
+        ['left_knee', 'left_ankle'],
+        ['right_knee', 'right_ankle'],
+      ]
+
+      skeleton.forEach(([startPoint, endPoint]) => {
+        const start = poses[0].keypoints.find((kp) => kp.name === startPoint)
+        const end = poses[0].keypoints.find((kp) => kp.name === endPoint)
+        if (start && end && start.score > 0.3 && end.score > 0.3) {
+          ctx.beginPath()
+          ctx.moveTo(start.x, start.y)
+          ctx.lineTo(end.x, end.y)
+          ctx.strokeStyle = 'blue'
+          ctx.lineWidth = 2
+          ctx.stroke()
+        }
+      })
+    },
+    [webcamRef]
+  )
 
   useEffect(() => {
     async function initializeDetector() {
