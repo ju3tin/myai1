@@ -12,7 +12,8 @@ import {
   CardTitle,
 } from '@/app/components/ui/card'
 import { RealTimeResults } from './RealTimeResults'
-import { TargetPoseImage } from './TargetPoseImage'
+import { Button } from '@/app/components/ui/button'
+import Image from 'next/image'
 
 export function ExerciseView() {
   const webcamRef = useRef<Webcam>(null)
@@ -23,6 +24,7 @@ export function ExerciseView() {
   const [poses, setPoses] = useState<poseDetection.Pose[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [screenshot, setScreenshot] = useState<string | null>(null)
 
   const drawPose = useCallback(
     (poses: poseDetection.Pose[]) => {
@@ -57,7 +59,7 @@ export function ExerciseView() {
           ctx.scale(-1, 1)
           ctx.font = '12px Arial'
           ctx.fillStyle = 'white'
-          ctx.fillText(keypoint.name, -keypoint.x + 5, keypoint.y - 5)
+          ctx.fillText(keypoint.name ?? '', -keypoint.x + 5, keypoint.y - 5)
           ctx.restore()
         }
       })
@@ -81,7 +83,16 @@ export function ExerciseView() {
       skeleton.forEach(([startPoint, endPoint]) => {
         const start = poses[0].keypoints.find((kp) => kp.name === startPoint)
         const end = poses[0].keypoints.find((kp) => kp.name === endPoint)
-        if (start && end && start.score > 0.3 && end.score > 0.3) {
+        if (
+          start &&
+          end &&
+          start.score &&
+          end.score &&
+          start.score &&
+          end.score &&
+          start.score > 0.3 &&
+          end.score > 0.3
+        ) {
           ctx.beginPath()
           ctx.moveTo(start.x, start.y)
           ctx.lineTo(end.x, end.y)
@@ -143,6 +154,13 @@ export function ExerciseView() {
     }
   }, [])
 
+  const captureScreenshot = useCallback(() => {
+    if (webcamRef.current) {
+      const imageSrc = webcamRef.current.getScreenshot()
+      setScreenshot(imageSrc)
+    }
+  }, [])
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
       <div className="space-y-8">
@@ -178,16 +196,27 @@ export function ExerciseView() {
                 className="absolute top-0 left-0 w-full h-full"
               />
             </div>
+            <Button onClick={captureScreenshot} className="mt-4">
+              Capture Screenshot
+            </Button>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Target Pose</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <TargetPoseImage />
-          </CardContent>
-        </Card>
+        {screenshot && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Captured Screenshot</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Image
+                src={screenshot}
+                alt="Captured screenshot"
+                width={640}
+                height={480}
+                className="w-full"
+              />
+            </CardContent>
+          </Card>
+        )}
       </div>
       <RealTimeResults poses={poses} />
     </div>
