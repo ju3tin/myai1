@@ -3,8 +3,10 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import Webcam from 'react-webcam'
 import * as poseDetection from '@tensorflow-models/pose-detection'
+import * as mpPose from '@mediapipe/pose'
 import * as tf from '@tensorflow/tfjs-core'
 import '@tensorflow/tfjs-backend-webgl'
+import '@tensorflow/tfjs-backend-webgpu'
 import {
   Card,
   CardContent,
@@ -14,8 +16,12 @@ import {
 import { RealTimeResults } from './RealTimeResults'
 import { Button } from '@/app/components/ui/button'
 import Image from 'next/image'
+import { SettingsPopover, SettingData } from './settings-popover'
+import { useToast } from '@/app/hooks/use-toast'
 
 export default function ExerciseView() {
+  const { toast } = useToast()
+
   const webcamRef = useRef<Webcam>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [detector, setDetector] = useState<poseDetection.PoseDetector | null>(
@@ -26,6 +32,20 @@ export default function ExerciseView() {
   const [error, setError] = useState<string | null>(null)
   const [screenshot, setScreenshot] = useState<string | null>(null)
   const [isBrowserReady, setIsBrowserReady] = useState(false)
+  const [settings, setSettings] = useState<SettingData>({
+    model: 'MoveNet',
+    modelVariant: 'lightning',
+    runtime: 'tfjs-webgl',
+  })
+
+  const handleSettingsChange = (newSettings: SettingData) => {
+    setSettings(newSettings)
+    // 在这里可以进行其他操作，如更新模型或运行时
+  }
+
+  useEffect(() => {
+    console.log('settings', settings)
+  }, [settings])
 
   const drawPose = useCallback(
     (poses: poseDetection.Pose[]) => {
@@ -108,22 +128,68 @@ export default function ExerciseView() {
     },
     [webcamRef]
   )
-
   useEffect(() => {
-    async function initializeDetector() {
-      await tf.ready()
-      const detectorConfig = {
-        modelType: poseDetection.movenet.modelType.SINGLEPOSE_THUNDER,
-        runtime: 'tfjs-webgl',
+    async function resetBackend(backendName: string) {
+      const ENGINE = tf.engine()
+      if (!(backendName in ENGINE.registryFactory)) {
+        toast({
+          title: 'Fail',
+          description: `${backendName} backend is not registered.`,
+        })
+        return
       }
-      const detector = await poseDetection.createDetector(
-        poseDetection.SupportedModels.MoveNet,
-        detectorConfig
-      )
-      setDetector(detector)
+
+      if (backendName in ENGINE.registry) {
+        const backendFactory = tf.findBackendFactory(backendName)
+        tf.removeBackend(backendName)
+        tf.registerBackend(backendName, backendFactory)
+      }
+
+      await tf.setBackend(backendName)
     }
-    initializeDetector()
-  }, [])
+
+    async function initDetector() {
+      switch (settings.model) {
+        case poseDetection.SupportedModels.BlazePose:
+          const runtime = settings.runtime.split('-')[0]
+          if (runtime === 'mediapipe') {
+            return poseDetection.createDetector(settings.model, {
+              runtime,
+              modelType:
+                settings.modelVariant as poseDetection.BlazePoseModelType,
+              solutionPath: `https://cdn.jsdelivr.net/npm/@mediapipe/pose@${mpPose.VERSION}`,
+            })
+          } else if (runtime === 'tfjs') {
+            return poseDetection.createDetector(settings.model, {
+              runtime,
+              modelType:
+                settings.modelVariant as poseDetection.BlazePoseModelType,
+            })
+          }
+        case poseDetection.SupportedModels.MoveNet:
+          let modelType
+          if (settings.modelVariant == 'lightning') {
+            modelType = poseDetection.movenet.modelType.SINGLEPOSE_LIGHTNING
+          } else if (settings.modelVariant == 'thunder') {
+            modelType = poseDetection.movenet.modelType.SINGLEPOSE_THUNDER
+          } else if (settings.modelVariant == 'multipose') {
+            modelType = poseDetection.movenet.modelType.MULTIPOSE_LIGHTNING
+          }
+          const modelConfig = { modelType }
+
+          return poseDetection.createDetector(settings.model, modelConfig)
+      }
+    }
+    async function initialize() {
+      setDetector(null)
+      await tf.ready()
+      const backend = settings.runtime.split('-')[1]
+      await resetBackend(backend)
+      const detector = await initDetector()
+      setDetector(detector as poseDetection.PoseDetector)
+    }
+    initialize()
+  }, [settings, toast])
 
   useEffect(() => {
     if (detector) {
@@ -167,69 +233,74 @@ export default function ExerciseView() {
   }, [])
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-      {isBrowserReady ? (
-        <>
-          <div className="space-y-8">
-            <Card>
-              <CardHeader>
-                <CardTitle>Camera View</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="relative">
-                  {isLoading && <p>Loading camera...</p>}
-                  {error && <p className="text-red-500">Error: {error}</p>}
-                  <Webcam
-                    ref={webcamRef}
-                    mirrored
-                    className="w-full"
-                    audio={false}
-                    screenshotFormat="image/jpeg"
-                    videoConstraints={{
-                      facingMode: 'user',
-                    }}
-                    onUserMedia={() => {
-                      console.log('Camera access granted')
-                      setIsLoading(false)
-                    }}
-                    onUserMediaError={(err) => {
-                      console.error('Camera error:', err)
-                      setError('Failed to access camera')
-                      setIsLoading(false)
-                    }}
-                  />
-                  <canvas
-                    ref={canvasRef}
-                    className="absolute top-0 left-0 w-full h-full"
-                  />
-                </div>
-                <Button onClick={captureScreenshot} className="mt-4">
-                  Capture Screenshot
-                </Button>
-              </CardContent>
-            </Card>
-            {screenshot && (
+    <div className="relative">
+      <div className="absolute top-4 right-4 z-10">
+        <SettingsPopover onSettingsChange={handleSettingsChange} />
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {isBrowserReady ? (
+          <>
+            <div className="space-y-8">
               <Card>
                 <CardHeader>
-                  <CardTitle>Captured Screenshot</CardTitle>
+                  <CardTitle>Camera View</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <Image
-                    src={screenshot}
-                    alt="Captured screenshot"
-                    width={640}
-                    height={480}
-                    className="w-full"
-                  />
+                  <div className="relative">
+                    {isLoading && <p>Loading camera...</p>}
+                    {error && <p className="text-red-500">Error: {error}</p>}
+                    <Webcam
+                      ref={webcamRef}
+                      mirrored
+                      className="w-full"
+                      audio={false}
+                      screenshotFormat="image/jpeg"
+                      videoConstraints={{
+                        facingMode: 'user',
+                      }}
+                      onUserMedia={() => {
+                        console.log('Camera access granted')
+                        setIsLoading(false)
+                      }}
+                      onUserMediaError={(err) => {
+                        console.error('Camera error:', err)
+                        setError('Failed to access camera')
+                        setIsLoading(false)
+                      }}
+                    />
+                    <canvas
+                      ref={canvasRef}
+                      className="absolute top-0 left-0 w-full h-full"
+                    />
+                  </div>
+                  <Button onClick={captureScreenshot} className="mt-4">
+                    Capture Screenshot
+                  </Button>
                 </CardContent>
               </Card>
-            )}
-          </div>
-          <RealTimeResults poses={poses} />
-        </>
-      ) : (
-        <p>Loading...</p>
-      )}
+              {screenshot && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Captured Screenshot</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <Image
+                      src={screenshot}
+                      alt="Captured screenshot"
+                      width={640}
+                      height={480}
+                      className="w-full"
+                    />
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+            <RealTimeResults poses={poses} />
+          </>
+        ) : (
+          <p>Loading...</p>
+        )}
+      </div>
     </div>
   )
 }
