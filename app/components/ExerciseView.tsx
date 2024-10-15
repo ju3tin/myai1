@@ -38,7 +38,8 @@ export default function ExerciseView() {
     runtime: 'tfjs-webgl',
   })
   const [fps, setFps] = useState<number>(0)
-  const lastFrameTime = useRef<number>(performance.now())
+  const frameCount = useRef<number>(0)
+  const lastFpsUpdateTime = useRef<number>(performance.now())
 
   const handleSettingsChange = (newSettings: SettingData) => {
     setSettings(newSettings)
@@ -131,12 +132,17 @@ export default function ExerciseView() {
     [webcamRef]
   )
 
-  const calculateFps = useCallback(() => {
+  const updateFps = useCallback(() => {
     const now = performance.now()
-    const delta = now - lastFrameTime.current
-    const newFps = 1000 / delta
-    setFps(Math.round(newFps))
-    lastFrameTime.current = now
+    const elapsed = now - lastFpsUpdateTime.current
+    frameCount.current++
+
+    if (elapsed > 1000) {
+      // Update FPS every second
+      setFps(Math.round((frameCount.current * 1000) / elapsed))
+      frameCount.current = 0
+      lastFpsUpdateTime.current = now
+    }
   }, [])
 
   useEffect(() => {
@@ -220,7 +226,7 @@ export default function ExerciseView() {
             const newPoses = await detector.estimatePoses(video)
             setPoses(newPoses)
             drawPose(newPoses)
-            calculateFps()
+            updateFps() // Call updateFps after each successful pose detection
           } catch (error) {
             console.error('Error estimating poses:', error)
           }
@@ -236,7 +242,7 @@ export default function ExerciseView() {
         cancelAnimationFrame(animationFrameId)
       }
     }
-  }, [detector, drawPose, webcamRef, calculateFps])
+  }, [detector, drawPose, webcamRef, updateFps])
 
   useEffect(() => {
     if (webcamRef.current) {
