@@ -37,6 +37,8 @@ export default function ExerciseView() {
     modelVariant: 'lightning',
     runtime: 'tfjs-webgl',
   })
+  const [fps, setFps] = useState<number>(0)
+  const lastFrameTime = useRef<number>(performance.now())
 
   const handleSettingsChange = (newSettings: SettingData) => {
     setSettings(newSettings)
@@ -128,6 +130,15 @@ export default function ExerciseView() {
     },
     [webcamRef]
   )
+
+  const calculateFps = useCallback(() => {
+    const now = performance.now()
+    const delta = now - lastFrameTime.current
+    const newFps = 1000 / delta
+    setFps(Math.round(newFps))
+    lastFrameTime.current = now
+  }, [])
+
   useEffect(() => {
     async function resetBackend(backendName: string) {
       const ENGINE = tf.engine()
@@ -209,6 +220,7 @@ export default function ExerciseView() {
             const newPoses = await detector.estimatePoses(video)
             setPoses(newPoses)
             drawPose(newPoses)
+            calculateFps()
           } catch (error) {
             console.error('Error estimating poses:', error)
           }
@@ -224,7 +236,7 @@ export default function ExerciseView() {
         cancelAnimationFrame(animationFrameId)
       }
     }
-  }, [detector, drawPose, webcamRef])
+  }, [detector, drawPose, webcamRef, calculateFps])
 
   useEffect(() => {
     if (webcamRef.current) {
@@ -283,6 +295,9 @@ export default function ExerciseView() {
                       ref={canvasRef}
                       className="absolute top-0 left-0 w-full h-full"
                     />
+                    <div className="absolute top-2 right-2 z-10 bg-black bg-opacity-50 text-white p-2 rounded">
+                      FPS: {fps}
+                    </div>
                   </div>
                   <Button onClick={captureScreenshot} className="mt-4">
                     Capture Screenshot
