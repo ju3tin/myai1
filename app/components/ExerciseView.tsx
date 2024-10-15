@@ -192,28 +192,39 @@ export default function ExerciseView() {
   }, [settings, toast])
 
   useEffect(() => {
-    if (detector) {
-      const intervalId = setInterval(async () => {
-        if (webcamRef.current && webcamRef.current.video) {
-          const video = webcamRef.current.video
-          if (
-            video.readyState === 4 &&
-            video.videoWidth > 0 &&
-            video.videoHeight > 0
-          ) {
-            try {
-              const newPoses = await detector.estimatePoses(video)
-              setPoses(newPoses)
-              drawPose(newPoses)
-            } catch (error) {
-              console.error('Error estimating poses:', error)
-            }
+    if (!detector || !webcamRef.current) return
+
+    let animationFrameId: number
+
+    async function detectPose() {
+      if (webcamRef.current && webcamRef.current.video) {
+        const video = webcamRef.current.video
+        if (
+          video.readyState === 4 &&
+          video.videoWidth > 0 &&
+          video.videoHeight > 0 &&
+          detector
+        ) {
+          try {
+            const newPoses = await detector.estimatePoses(video)
+            setPoses(newPoses)
+            drawPose(newPoses)
+          } catch (error) {
+            console.error('Error estimating poses:', error)
           }
         }
-      }, 100)
-      return () => clearInterval(intervalId)
+      }
+      animationFrameId = requestAnimationFrame(detectPose)
     }
-  }, [detector, drawPose])
+
+    detectPose()
+
+    return () => {
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId)
+      }
+    }
+  }, [detector, drawPose, webcamRef])
 
   useEffect(() => {
     if (webcamRef.current) {
