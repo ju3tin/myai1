@@ -1,4 +1,5 @@
 import { ReactNode } from 'react'
+
 import dynamic from 'next/dynamic'
 
 const Header = dynamic(() => import('@/app/components/Header'), { ssr: false })

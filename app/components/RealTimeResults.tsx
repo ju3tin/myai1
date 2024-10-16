@@ -1,5 +1,7 @@
 import React, { memo } from 'react'
+
 import * as poseDetection from '@tensorflow-models/pose-detection'
+
 import {
   Card,
   CardContent,

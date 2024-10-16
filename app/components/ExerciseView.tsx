@@ -1,23 +1,26 @@
 'use client'
 
 import { useState, useRef, useEffect, useCallback } from 'react'
-import Webcam from 'react-webcam'
-import * as poseDetection from '@tensorflow-models/pose-detection'
+
 import * as mpPose from '@mediapipe/pose'
 import * as tf from '@tensorflow/tfjs-core'
+import * as poseDetection from '@tensorflow-models/pose-detection'
+import Image from 'next/image'
+import Webcam from 'react-webcam'
+
 import '@tensorflow/tfjs-backend-webgl'
 import '@tensorflow/tfjs-backend-webgpu'
+import { Button } from '@/app/components/ui/button'
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
 } from '@/app/components/ui/card'
-import { RealTimeResults } from './RealTimeResults'
-import { Button } from '@/app/components/ui/button'
-import Image from 'next/image'
-import { SettingsPopover, SettingData } from './settings-popover'
 import { useToast } from '@/app/hooks/use-toast'
+
+import { RealTimeResults } from './RealTimeResults'
+import { SettingsPopover, SettingData } from './settings-popover'
 
 export default function ExerciseView() {
   const { toast } = useToast()
