@@ -8,10 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "lint:fix": "next lint --fix",
-    "format:check": "prettier --check .",
-    "prepare": "husky install",
-    "format": "prettier --write .",
-    "fix": "pnpm lint:fix && pnpm format"
+    "fix": "pnpm lint:fix"
   },
   "dependencies": {
     "@mediapipe/pose": "^0.5.1675469404",
