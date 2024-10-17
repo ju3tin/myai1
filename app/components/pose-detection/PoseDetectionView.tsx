@@ -57,31 +57,43 @@ export function PoseDetectionView() {
               <CardHeader>
                 <CardTitle>Similarity Chart</CardTitle>
               </CardHeader>
-              <CardContent className="h-[300px]"> {/* 设置固定高度 */}
-    <ResponsiveContainer width="100%" height="100%">
-      <LineChart data={similarityData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
-        <XAxis
-          dataKey="time"
-          type="number"
-          domain={['dataMin', 'dataMax']}
-          tickFormatter={(unixTime) => new Date(unixTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-          interval="preserveStartEnd"
-        />
-        <YAxis domain={[0, 1]} />
-        <Tooltip
-          labelFormatter={(label) => new Date(label).toLocaleTimeString()}
-          formatter={(value: number) => value.toFixed(4)}
-        />
-        <Line
-          type="monotone"
-          dataKey="similarity"
-          stroke="#8884d8"
-          dot={false}
-          isAnimationActive={false}
-        />
-      </LineChart>
-    </ResponsiveContainer>
-  </CardContent>
+              <CardContent className="h-[300px]">
+                {' '}
+                {/* 设置固定高度 */}
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart
+                    data={similarityData}
+                    margin={{ top: 5, right: 5, left: 5, bottom: 5 }}
+                  >
+                    <XAxis
+                      dataKey="time"
+                      type="number"
+                      domain={['dataMin', 'dataMax']}
+                      tickFormatter={(unixTime) =>
+                        new Date(unixTime).toLocaleTimeString([], {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })
+                      }
+                      interval="preserveStartEnd"
+                    />
+                    <YAxis domain={[0, 1]} />
+                    <Tooltip
+                      labelFormatter={(label) =>
+                        new Date(label).toLocaleTimeString()
+                      }
+                      formatter={(value: number) => value.toFixed(4)}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="similarity"
+                      stroke="#8884d8"
+                      dot={false}
+                      isAnimationActive={false}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </CardContent>
             </Card>
           </div>
           <div className="">
