@@ -4,6 +4,7 @@ import { useRef, useState, useEffect, useCallback, RefObject } from 'react'
 
 import * as tf from '@tensorflow/tfjs-core'
 import * as poseDetection from '@tensorflow-models/pose-detection'
+import { poseSimilarity } from 'posenet-similarity'
 import Webcam from 'react-webcam'
 
 import '@tensorflow/tfjs-backend-webgl'
@@ -15,14 +16,29 @@ import {
 } from '@/app/components/ui/card'
 import { drawPose } from '@/app/lib/poseDrawing'
 
+export interface PSPose {
+  keypoints: PSKeypoint[]
+}
+
+export interface PSKeypoint {
+  position: {
+    y: number
+    x: number
+  }
+  part: string
+  score: number
+}
+
 interface WebcamViewProps {
   targetImageRef: RefObject<HTMLImageElement>
   targetCanvasRef: RefObject<HTMLCanvasElement>
+  onSimilarityUpdate: (similarity: number) => void
 }
 
 export function WebcamView({
   targetImageRef,
   targetCanvasRef,
+  onSimilarityUpdate,
 }: WebcamViewProps) {
   const webcamRef = useRef<Webcam>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -76,6 +92,27 @@ export function WebcamView({
     initDetector()
   }, [])
 
+  const calculateSimilarity = useCallback(
+    (pose: poseDetection.Pose) => {
+      if (targetPose) {
+        const convertToPSPose = (p: poseDetection.Pose): PSPose => ({
+          keypoints: p.keypoints.map((kp) => ({
+            position: { x: kp.x, y: kp.y },
+            part: kp.name,
+            score: kp.score || 0,
+          })),
+        })
+
+        const psPose = convertToPSPose(pose)
+        const psTargetPose = convertToPSPose(targetPose)
+
+        const similarity = poseSimilarity(psTargetPose, psPose)
+        onSimilarityUpdate(similarity)
+      }
+    },
+    [targetPose, onSimilarityUpdate]
+  )
+
   useEffect(() => {
     if (!detector || !webcamRef.current) return
 
@@ -94,6 +131,9 @@ export function WebcamView({
             const poses = await detector.estimatePoses(video)
             drawPoseOnCanvas(poses)
             updateFps()
+            if (poses.length > 0) {
+              calculateSimilarity(poses[0])
+            }
           } catch (error) {
             console.error('Error estimating poses:', error)
           }
@@ -109,7 +149,7 @@ export function WebcamView({
         cancelAnimationFrame(animationFrameId)
       }
     }
-  }, [detector, drawPoseOnCanvas, updateFps])
+  }, [detector, drawPoseOnCanvas, updateFps, calculateSimilarity])
 
   useEffect(() => {
     if (!detector || !targetImageRef.current) return

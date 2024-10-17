@@ -1,7 +1,5 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-
 import {
   Line,
   LineChart,
@@ -23,24 +21,11 @@ interface DataPoint {
   similarity: number
 }
 
-export function SimilarityChart() {
-  const [data, setData] = useState<DataPoint[]>([])
+interface SimilarityChartProps {
+  data: DataPoint[]
+}
 
-  useEffect(() => {
-    // Simulating real-time data updates
-    const interval = setInterval(() => {
-      setData((currentData) => {
-        const newData = [
-          ...currentData,
-          { time: Date.now(), similarity: Math.random() },
-        ]
-        return newData.slice(-500) // Keep only the last 500 data points
-      })
-    }, 100)
-
-    return () => clearInterval(interval)
-  }, [])
-
+export function SimilarityChart({ data }: SimilarityChartProps) {
   return (
     <Card className="">
       <CardHeader>
@@ -49,9 +34,19 @@ export function SimilarityChart() {
       <CardContent className="h-[calc(100%-4rem)]">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={data}>
-            <XAxis dataKey="time" type="number" domain={['auto', 'auto']} />
+            <XAxis
+              dataKey="time"
+              type="number"
+              domain={['auto', 'auto']}
+              tickFormatter={(unixTime) =>
+                new Date(unixTime).toLocaleTimeString()
+              }
+            />
             <YAxis domain={[0, 1]} />
-            <Tooltip />
+            <Tooltip
+              labelFormatter={(label) => new Date(label).toLocaleTimeString()}
+              formatter={(value: number) => value.toFixed(4)}
+            />
             <Line
               type="monotone"
               dataKey="similarity"
