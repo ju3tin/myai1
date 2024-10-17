@@ -98,7 +98,7 @@ export function WebcamView({
         const convertToPSPose = (p: poseDetection.Pose): PSPose => ({
           keypoints: p.keypoints.map((kp) => ({
             position: { x: kp.x, y: kp.y },
-            part: kp.name,
+            part: kp.name || '', // Provide a default empty string if name is undefined
             score: kp.score || 0,
           })),
         })
@@ -107,7 +107,11 @@ export function WebcamView({
         const psTargetPose = convertToPSPose(targetPose)
 
         const similarity = poseSimilarity(psTargetPose, psPose)
-        onSimilarityUpdate(similarity)
+        if (typeof similarity === 'number') {
+          onSimilarityUpdate(similarity)
+        } else {
+          console.error('Similarity calculation error:', similarity)
+        }
       }
     },
     [targetPose, onSimilarityUpdate]
