@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState, useEffect, useCallback } from 'react'
+import { useRef, useState, useEffect, useCallback, RefObject } from 'react'
 
 import * as tf from '@tensorflow/tfjs-core'
 import * as poseDetection from '@tensorflow-models/pose-detection'
@@ -13,88 +13,39 @@ import {
   CardHeader,
   CardTitle,
 } from '@/app/components/ui/card'
+import { drawPose } from '@/app/lib/poseDrawing'
 
-export function WebcamView() {
+interface WebcamViewProps {
+  targetImageRef: RefObject<HTMLImageElement>
+  targetCanvasRef: RefObject<HTMLCanvasElement>
+}
+
+export function WebcamView({
+  targetImageRef,
+  targetCanvasRef,
+}: WebcamViewProps) {
   const webcamRef = useRef<Webcam>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [detector, setDetector] = useState<poseDetection.PoseDetector | null>(null)
+  const [detector, setDetector] = useState<poseDetection.PoseDetector | null>(
+    null
+  )
   const [fps, setFps] = useState<number>(0)
   const frameCount = useRef<number>(0)
-  const lastFpsUpdateTime = useRef<number>(performance.now())
+  const lastFpsUpdateTime = useRef<number>(0)
+  const [targetPose, setTargetPose] = useState<poseDetection.Pose | null>(null)
 
-  const drawPose = useCallback((poses: poseDetection.Pose[]) => {
+  useEffect(() => {
+    lastFpsUpdateTime.current = performance.now()
+  }, [])
+
+  const drawPoseOnCanvas = useCallback((poses: poseDetection.Pose[]) => {
     const ctx = canvasRef.current?.getContext('2d')
-    if (!ctx || poses.length === 0) return
-
-    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
-
     const video = webcamRef.current?.video
-    if (video) {
-      ctx.canvas.width = video.videoWidth
-      ctx.canvas.height = video.videoHeight
-    }
+    if (!ctx || !video) return
 
-    ctx.save()
-    ctx.scale(-1, 1)
-    ctx.translate(-ctx.canvas.width, 0)
-
-    poses[0].keypoints.forEach((keypoint) => {
-      if (keypoint.score && keypoint.score > 0.3) {
-        ctx.beginPath()
-        ctx.arc(keypoint.x, keypoint.y, 5, 0, 2 * Math.PI)
-        ctx.fillStyle = 'red'
-        ctx.fill()
-
-        ctx.save()
-        ctx.scale(-1, 1)
-        ctx.font = '12px Arial'
-        ctx.fillStyle = 'white'
-        ctx.fillText(keypoint.name ?? '', -keypoint.x + 5, keypoint.y - 5)
-        ctx.restore()
-      }
-    })
-
-    // Draw skeleton
-    const skeleton = [
-      ['left_shoulder', 'right_shoulder'],
-      ['left_shoulder', 'left_elbow'],
-      ['right_shoulder', 'right_elbow'],
-      ['left_elbow', 'left_wrist'],
-      ['right_elbow', 'right_wrist'],
-      ['left_shoulder', 'left_hip'],
-      ['right_shoulder', 'right_hip'],
-      ['left_hip', 'right_hip'],
-      ['left_hip', 'left_knee'],
-      ['right_hip', 'right_knee'],
-      ['left_knee', 'left_ankle'],
-      ['right_knee', 'right_ankle'],
-    ]
-
-    skeleton.forEach(([startPoint, endPoint]) => {
-      const start = poses[0].keypoints.find((kp) => kp.name === startPoint)
-      const end = poses[0].keypoints.find((kp) => kp.name === endPoint)
-      if (
-        start &&
-        end &&
-        start.score &&
-        end.score &&
-        start.score &&
-        end.score &&
-        start.score > 0.3 &&
-        end.score > 0.3
-      ) {
-        ctx.beginPath()
-        ctx.moveTo(start.x, start.y)
-        ctx.lineTo(end.x, end.y)
-        ctx.strokeStyle = 'blue'
-        ctx.lineWidth = 2
-        ctx.stroke()
-      }
-    })
-
-    ctx.restore()
+    drawPose(ctx, poses, video.videoWidth, video.videoHeight)
   }, [])
 
   const updateFps = useCallback(() => {
@@ -113,8 +64,13 @@ export function WebcamView() {
     async function initDetector() {
       await tf.ready()
       await tf.setBackend('webgl')
-      const modelConfig = { modelType: poseDetection.movenet.modelType.SINGLEPOSE_LIGHTNING }
-      const detector = await poseDetection.createDetector(poseDetection.SupportedModels.MoveNet, modelConfig)
+      const modelConfig = {
+        modelType: poseDetection.movenet.modelType.SINGLEPOSE_THUNDER,
+      }
+      const detector = await poseDetection.createDetector(
+        poseDetection.SupportedModels.MoveNet,
+        modelConfig
+      )
       setDetector(detector)
     }
     initDetector()
@@ -128,10 +84,15 @@ export function WebcamView() {
     async function detectPose() {
       if (webcamRef.current && webcamRef.current.video) {
         const video = webcamRef.current.video
-        if (video.readyState === 4 && video.videoWidth > 0 && video.videoHeight > 0 && detector) {
+        if (
+          video.readyState === 4 &&
+          video.videoWidth > 0 &&
+          video.videoHeight > 0 &&
+          detector
+        ) {
           try {
             const poses = await detector.estimatePoses(video)
-            drawPose(poses)
+            drawPoseOnCanvas(poses)
             updateFps()
           } catch (error) {
             console.error('Error estimating poses:', error)
@@ -148,15 +109,85 @@ export function WebcamView() {
         cancelAnimationFrame(animationFrameId)
       }
     }
-  }, [detector, drawPose, updateFps])
+  }, [detector, drawPoseOnCanvas, updateFps])
+
+  useEffect(() => {
+    if (!detector || !targetImageRef.current) return
+
+    async function detectTargetPose() {
+      if (targetImageRef.current && detector) {
+        try {
+          // 等待图像加载完成
+          if (!targetImageRef.current.complete) {
+            await new Promise((resolve) => {
+              targetImageRef.current!.onload = resolve
+            })
+          }
+
+          // 等待下一帧，确保图像已渲染
+          await new Promise(requestAnimationFrame)
+
+
+          // 使用 canvas 进行姿势估计
+          const poses = await detector.estimatePoses(targetImageRef.current)
+
+          console.log(poses)
+          if (poses.length > 0) {
+            setTargetPose(poses[0])
+          }
+        } catch (error) {
+          console.error('Error estimating target pose:', error)
+        }
+      }
+    }
+
+    detectTargetPose()
+  }, [detector, targetImageRef])
+
+  const drawTargetPoseOnCanvas = useCallback(() => {
+    const ctx = targetCanvasRef.current?.getContext('2d')
+    const targetImage = targetImageRef.current
+    if (!ctx || !targetImage || !targetPose) return
+
+    // Clear the canvas
+    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
+    // Save the current context state
+    ctx.save()
+
+    // Draw the image scaled to fit the canvas
+    ctx.drawImage(targetImage, 0, 0, ctx.canvas.width, ctx.canvas.height)
+
+    // Restore the context state
+    ctx.restore()
+
+    // Scale and flip the pose keypoints
+    const scaledPose = {
+      ...targetPose,
+      keypoints: targetPose.keypoints.map((keypoint) => ({
+        ...keypoint,
+        x: ctx.canvas.width - keypoint.x, 
+        y: keypoint.y,
+      })),
+    }
+    console.log(scaledPose)
+    // Draw the scaled and flipped pose
+    drawPose(ctx, [scaledPose], ctx.canvas.width, ctx.canvas.height)
+  }, [targetPose, targetCanvasRef, targetImageRef])
+
+  useEffect(() => {
+    if (targetPose) {
+      drawTargetPoseOnCanvas()
+    }
+  }, [targetPose, drawTargetPoseOnCanvas])
 
   return (
     <Card className="flex flex-col">
       <CardHeader className="flex-shrink-0">
-        <CardTitle>Webcam View</CardTitle>
+        <CardTitle>Pose Detection</CardTitle>
       </CardHeader>
-      <CardContent className="flex-grow flex flex-col p-2 overflow-hidden">
-        <div className="relative">
+      <CardContent className="flex-grow flex flex-row p-2 overflow-hidden">
+        <div className="flex-1 relative">
+          <h3 className="text-lg font-semibold mb-2">Webcam View</h3>
           {isLoading && (
             <p className="absolute inset-0 flex items-center justify-center">
               Loading camera...
@@ -167,6 +198,7 @@ export function WebcamView() {
               Error: {error}
             </p>
           )}
+
           <Webcam
             ref={webcamRef}
             mirrored
