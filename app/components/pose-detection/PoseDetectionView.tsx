@@ -7,21 +7,21 @@ import { WebcamView } from './WebcamView'
 
 export function PoseDetectionView() {
   return (
-    <div className="flex h-[calc(100vh-4rem)] overflow-hidden">
-      <div className="flex-1 flex flex-col p-4 space-y-4">
-        <div className="flex-1">
+    <div className="flex flex-col h-[calc(100vh-4rem)] min-h-[calc(100vh-4rem)]">
+      <div className="flex-1 flex p-4 space-x-4">
+        <div className="w-1/3 flex flex-col h-full min-h-full">
+          <div className="mb-4">
+            <Settings />
+          </div>
+          <div className="mb-4">
+            <SimilarityChart />
+          </div>
+          <div className="">
+            <WebcamView />
+          </div>
+        </div>
+        <div className="flex-1 relative h-full min-h-full">
           <TargetImage />
-        </div>
-        <div className="flex-1">
-          <WebcamView />
-        </div>
-      </div>
-      <div className="flex-1 flex flex-col p-4 space-y-4">
-        <div className="flex-none h-[20vh]">
-          <Settings />
-        </div>
-        <div className="flex-1">
-          <SimilarityChart />
         </div>
       </div>
     </div>

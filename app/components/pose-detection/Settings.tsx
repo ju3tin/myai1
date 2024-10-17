@@ -2,16 +2,27 @@
 
 import { useState } from 'react'
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card'
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@/app/components/ui/card'
 import { Label } from '@/app/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/app/components/ui/select'
 
 export function Settings() {
   const [similarityMethod, setSimilarityMethod] = useState('cosine')
   const [coordinateSystem, setCoordinateSystem] = useState('default')
 
   return (
-    <Card className="h-full">
+    <Card className="">
       <CardHeader>
         <CardTitle>Settings</CardTitle>
       </CardHeader>

@@ -1,10 +1,15 @@
 import Image from 'next/image'
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card'
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@/app/components/ui/card'
 
 export function TargetImage() {
   return (
-    <Card className="h-full">
+    <Card className="">
       <CardHeader>
         <CardTitle>Target Pose</CardTitle>
       </CardHeader>
