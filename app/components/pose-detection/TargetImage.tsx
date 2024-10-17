@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/ca
 
 export function TargetImage() {
   return (
-    <Card className="h-[calc(50vh-2rem)]">
+    <Card className="h-full">
       <CardHeader>
         <CardTitle>Target Pose</CardTitle>
       </CardHeader>

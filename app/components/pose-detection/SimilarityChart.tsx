@@ -27,11 +27,11 @@ export function SimilarityChart() {
   }, [])
 
   return (
-    <Card className="h-[calc(80vh-1rem)]">
+    <Card className="h-full">
       <CardHeader>
         <CardTitle>Similarity Chart</CardTitle>
       </CardHeader>
-      <CardContent className="h-[calc(100%-5rem)]">
+      <CardContent className="h-[calc(100%-4rem)]">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={data}>
             <XAxis dataKey="time" type="number" domain={['auto', 'auto']} />

@@ -11,7 +11,7 @@ export function Settings() {
   const [coordinateSystem, setCoordinateSystem] = useState('default')
 
   return (
-    <Card className="h-[20vh]">
+    <Card className="h-full">
       <CardHeader>
         <CardTitle>Settings</CardTitle>
       </CardHeader>
