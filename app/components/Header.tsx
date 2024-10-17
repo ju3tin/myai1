@@ -16,6 +16,9 @@ export default function Header() {
           <Button variant="ghost" asChild>
             <Link href="/progress">Progress</Link>
           </Button>
+          <Button variant="ghost" asChild>
+            <Link href="/pose-detection">Pose Detection</Link>
+          </Button>
         </nav>
       </div>
     </header>
