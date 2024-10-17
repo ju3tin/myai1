@@ -127,7 +127,6 @@ export function WebcamView({
           // 等待下一帧，确保图像已渲染
           await new Promise(requestAnimationFrame)
 
-
           // 使用 canvas 进行姿势估计
           const poses = await detector.estimatePoses(targetImageRef.current)
 
@@ -165,7 +164,7 @@ export function WebcamView({
       ...targetPose,
       keypoints: targetPose.keypoints.map((keypoint) => ({
         ...keypoint,
-        x: ctx.canvas.width - keypoint.x, 
+        x: ctx.canvas.width - keypoint.x,
         y: keypoint.y,
       })),
     }
