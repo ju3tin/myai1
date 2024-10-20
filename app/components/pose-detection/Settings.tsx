@@ -34,8 +34,9 @@ export function Settings() {
               <SelectValue placeholder="Select method" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="cosine">Cosine</SelectItem>
-              <SelectItem value="oks">OKS</SelectItem>
+              <SelectItem value="cosineDistance">Cosine</SelectItem>
+              <SelectItem value="weightedDistance">Weighted</SelectItem>
+              <SelectItem value="cosineSimilarity">CosineSimilarity</SelectItem>
             </SelectContent>
           </Select>
 
