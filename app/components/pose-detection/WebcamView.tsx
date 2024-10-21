@@ -115,7 +115,10 @@ export function WebcamView({
           // Implement coordinate system transformation logic here
           // This might involve adjusting the keypoint positions based on the selected origin
         }
-        const strategyMap: Record<string, 'cosineDistance' | 'weightedDistance' | 'cosineSimilarity'> = {
+        const strategyMap: Record<
+          string,
+          'cosineDistance' | 'weightedDistance' | 'cosineSimilarity'
+        > = {
           cosineDistance: 'cosineDistance',
           weightedDistance: 'weightedDistance',
           cosineSimilarity: 'cosineSimilarity',
