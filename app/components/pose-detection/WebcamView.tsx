@@ -33,12 +33,16 @@ interface WebcamViewProps {
   targetImageRef: RefObject<HTMLImageElement>
   targetCanvasRef: RefObject<HTMLCanvasElement>
   onSimilarityUpdate: (similarity: number) => void
+  similarityMethod: string
+  coordinateSystem: string
 }
 
 export function WebcamView({
   targetImageRef,
   targetCanvasRef,
   onSimilarityUpdate,
+  similarityMethod,
+  coordinateSystem,
 }: WebcamViewProps) {
   const webcamRef = useRef<Webcam>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -98,7 +102,7 @@ export function WebcamView({
         const convertToPSPose = (p: poseDetection.Pose): PSPose => ({
           keypoints: p.keypoints.map((kp) => ({
             position: { x: kp.x, y: kp.y },
-            part: kp.name || '', // Provide a default empty string if name is undefined
+            part: kp.name || '',
             score: kp.score || 0,
           })),
         })
@@ -106,7 +110,27 @@ export function WebcamView({
         const psPose = convertToPSPose(pose)
         const psTargetPose = convertToPSPose(targetPose)
 
-        const similarity = poseSimilarity(psTargetPose, psPose)
+        // Apply coordinate system transformation if needed
+        if (coordinateSystem !== 'default') {
+          // Implement coordinate system transformation logic here
+          // This might involve adjusting the keypoint positions based on the selected origin
+        }
+
+        // Use the selected similarity method
+        let similarity: number | Error
+        switch (similarityMethod) {
+          case 'cosineDistance':
+            similarity = poseSimilarity(psPose, psTargetPose, { strategy: 'cosineDistance' })
+            break
+          case 'weightedDistance':
+            similarity = poseSimilarity(psPose, psTargetPose, { strategy: 'weightedDistance' })
+            break
+          case 'cosineSimilarity':
+            similarity = poseSimilarity(psPose, psTargetPose, { strategy: 'cosineSimilarity' })
+            break
+          default:
+            similarity = poseSimilarity(psPose, psTargetPose)
+        }
         if (typeof similarity === 'number') {
           onSimilarityUpdate(similarity)
         } else {
@@ -114,7 +138,7 @@ export function WebcamView({
         }
       }
     },
-    [targetPose, onSimilarityUpdate]
+    [targetPose, onSimilarityUpdate, similarityMethod, coordinateSystem]
   )
 
   useEffect(() => {

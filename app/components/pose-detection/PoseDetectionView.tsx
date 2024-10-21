@@ -37,6 +37,8 @@ export function PoseDetectionView() {
   const targetImageRef = useRef<HTMLImageElement>(null)
   const targetCanvasRef = useRef<HTMLCanvasElement>(null)
   const [similarityData, setSimilarityData] = useState<DataPoint[]>(initialData)
+  const [similarityMethod, setSimilarityMethod] = useState('cosineDistance')
+  const [coordinateSystem, setCoordinateSystem] = useState('default')
 
   const handleSimilarityUpdate = useCallback((similarity: number) => {
     setSimilarityData((prevData) => {
@@ -50,7 +52,12 @@ export function PoseDetectionView() {
       <div className="flex-1 flex p-4 space-x-4">
         <div className="w-1/3 flex flex-col h-full min-h-full">
           <div className="mb-4">
-            <Settings />
+            <Settings
+              similarityMethod={similarityMethod}
+              setSimilarityMethod={setSimilarityMethod}
+              coordinateSystem={coordinateSystem}
+              setCoordinateSystem={setCoordinateSystem}
+            />
           </div>
           <div className="mb-4">
             <Card className="">
@@ -101,6 +108,8 @@ export function PoseDetectionView() {
               targetImageRef={targetImageRef}
               targetCanvasRef={targetCanvasRef}
               onSimilarityUpdate={handleSimilarityUpdate}
+              similarityMethod={similarityMethod}
+              coordinateSystem={coordinateSystem}
             />
           </div>
         </div>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { Dispatch, SetStateAction } from 'react'
 
 import {
   Card,
@@ -17,10 +17,19 @@ import {
   SelectValue,
 } from '@/app/components/ui/select'
 
-export function Settings() {
-  const [similarityMethod, setSimilarityMethod] = useState('cosine')
-  const [coordinateSystem, setCoordinateSystem] = useState('default')
+interface SettingsProps {
+  similarityMethod: string
+  setSimilarityMethod: Dispatch<SetStateAction<string>>
+  coordinateSystem: string
+  setCoordinateSystem: Dispatch<SetStateAction<string>>
+}
 
+export function Settings({
+  similarityMethod,
+  setSimilarityMethod,
+  coordinateSystem,
+  setCoordinateSystem,
+}: SettingsProps) {
   return (
     <Card className="">
       <CardHeader>
@@ -35,8 +44,12 @@ export function Settings() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="cosineDistance">Cosine Distance</SelectItem>
-              <SelectItem value="weightedDistance">Weighted Distance</SelectItem>
-              <SelectItem value="cosineSimilarity">Cosine Similarity</SelectItem>
+              <SelectItem value="weightedDistance">
+                Weighted Distance
+              </SelectItem>
+              <SelectItem value="cosineSimilarity">
+                Cosine Similarity
+              </SelectItem>
             </SelectContent>
           </Select>
 
