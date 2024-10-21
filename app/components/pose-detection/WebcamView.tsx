@@ -115,22 +115,16 @@ export function WebcamView({
           // Implement coordinate system transformation logic here
           // This might involve adjusting the keypoint positions based on the selected origin
         }
-
-        // Use the selected similarity method
-        let similarity: number | Error
-        switch (similarityMethod) {
-          case 'cosineDistance':
-            similarity = poseSimilarity(psPose, psTargetPose, { strategy: 'cosineDistance' })
-            break
-          case 'weightedDistance':
-            similarity = poseSimilarity(psPose, psTargetPose, { strategy: 'weightedDistance' })
-            break
-          case 'cosineSimilarity':
-            similarity = poseSimilarity(psPose, psTargetPose, { strategy: 'cosineSimilarity' })
-            break
-          default:
-            similarity = poseSimilarity(psPose, psTargetPose)
+        const strategyMap: Record<string, 'cosineDistance' | 'weightedDistance' | 'cosineSimilarity'> = {
+          cosineDistance: 'cosineDistance',
+          weightedDistance: 'weightedDistance',
+          cosineSimilarity: 'cosineSimilarity',
         }
+
+        const strategy = strategyMap[similarityMethod] || 'cosineDistance'
+        // Use the selected similarity method
+        const similarity = poseSimilarity(psPose, psTargetPose, { strategy })
+
         if (typeof similarity === 'number') {
           onSimilarityUpdate(similarity)
         } else {
