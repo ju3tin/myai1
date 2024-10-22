@@ -11,10 +11,7 @@ export default function Header() {
         </Link>
         <nav>
           <Button variant="ghost" asChild>
-            <Link href="/exercises">Exercises</Link>
-          </Button>
-          <Button variant="ghost" asChild>
-            <Link href="/progress">Progress</Link>
+            <Link href="/pose-tracking">Pose Tracking</Link>
           </Button>
           <Button variant="ghost" asChild>
             <Link href="/pose-detection">Pose Detection</Link>
