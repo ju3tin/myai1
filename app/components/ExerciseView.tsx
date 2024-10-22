@@ -18,6 +18,7 @@ import {
   CardTitle,
 } from '@/app/components/ui/card'
 import { useToast } from '@/app/hooks/use-toast'
+import { drawPose as dp } from '@/app/lib/poseDrawing'
 
 import { RealTimeResults } from './RealTimeResults'
 import { SettingsPopover, SettingData } from './settings-popover'
@@ -56,81 +57,10 @@ export default function ExerciseView() {
   const drawPose = useCallback(
     (poses: poseDetection.Pose[]) => {
       const ctx = canvasRef.current?.getContext('2d')
-      if (!ctx || poses.length === 0) return
-
-      // Clear the canvas
-      ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
-
-      // Set canvas size to match video
       const video = webcamRef.current?.video
-      if (video) {
-        ctx.canvas.width = video.videoWidth
-        ctx.canvas.height = video.videoHeight
-      }
+      if (!ctx || !video) return
 
-      // Flip the context horizontally
-      ctx.save()
-      ctx.scale(-1, 1)
-      ctx.translate(-ctx.canvas.width, 0)
-
-      poses[0].keypoints.forEach((keypoint) => {
-        if (keypoint.score && keypoint.score > 0.3) {
-          // Draw keypoint
-          ctx.beginPath()
-          ctx.arc(keypoint.x, keypoint.y, 5, 0, 2 * Math.PI)
-          ctx.fillStyle = 'red'
-          ctx.fill()
-
-          // Draw keypoint name (need to flip text back)
-          ctx.save()
-          ctx.scale(-1, 1)
-          ctx.font = '12px Arial'
-          ctx.fillStyle = 'white'
-          ctx.fillText(keypoint.name ?? '', -keypoint.x + 5, keypoint.y - 5)
-          ctx.restore()
-        }
-      })
-
-      // Draw skeleton
-      const skeleton = [
-        ['left_shoulder', 'right_shoulder'],
-        ['left_shoulder', 'left_elbow'],
-        ['right_shoulder', 'right_elbow'],
-        ['left_elbow', 'left_wrist'],
-        ['right_elbow', 'right_wrist'],
-        ['left_shoulder', 'left_hip'],
-        ['right_shoulder', 'right_hip'],
-        ['left_hip', 'right_hip'],
-        ['left_hip', 'left_knee'],
-        ['right_hip', 'right_knee'],
-        ['left_knee', 'left_ankle'],
-        ['right_knee', 'right_ankle'],
-      ]
-
-      skeleton.forEach(([startPoint, endPoint]) => {
-        const start = poses[0].keypoints.find((kp) => kp.name === startPoint)
-        const end = poses[0].keypoints.find((kp) => kp.name === endPoint)
-        if (
-          start &&
-          end &&
-          start.score &&
-          end.score &&
-          start.score &&
-          end.score &&
-          start.score > 0.3 &&
-          end.score > 0.3
-        ) {
-          ctx.beginPath()
-          ctx.moveTo(start.x, start.y)
-          ctx.lineTo(end.x, end.y)
-          ctx.strokeStyle = 'blue'
-          ctx.lineWidth = 2
-          ctx.stroke()
-        }
-      })
-
-      // Restore the context
-      ctx.restore()
+      dp(ctx, poses, video.videoWidth, video.videoHeight)
     },
     [webcamRef]
   )

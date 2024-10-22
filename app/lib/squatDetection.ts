@@ -11,7 +11,7 @@ export function detectSquat({
   pose,
   isSquatting,
   setSquatCount,
-  setFeedback
+  setFeedback,
 }: {
   pose: poseDetection.Pose
   isSquatting: React.MutableRefObject<boolean>
@@ -19,20 +19,44 @@ export function detectSquat({
   setFeedback: React.Dispatch<React.SetStateAction<Feedback>>
 }): void {
   const keypoints = [
-    'left_shoulder', 'left_elbow', 'left_wrist', 'left_hip', 'left_knee', 'left_ankle',
-    'right_shoulder', 'right_elbow', 'right_wrist', 'right_hip', 'right_knee', 'right_ankle'
+    'left_shoulder',
+    'left_elbow',
+    'left_wrist',
+    'left_hip',
+    'left_knee',
+    'left_ankle',
+    'right_shoulder',
+    'right_elbow',
+    'right_wrist',
+    'right_hip',
+    'right_knee',
+    'right_ankle',
   ]
 
-  const foundKeypoints = keypoints.map(name => pose.keypoints.find(kp => kp.name === name))
+  const foundKeypoints = keypoints.map((name) =>
+    pose.keypoints.find((kp) => kp.name === name)
+  )
 
-  if (foundKeypoints.some(kp => !kp || (kp.score ?? 0) < CONFIDENCE_THRESHOLD)) {
+  if (
+    foundKeypoints.some((kp) => !kp || (kp.score ?? 0) < CONFIDENCE_THRESHOLD)
+  ) {
     setFeedback({ isCorrect: false, message: '请确保您的全身在摄像头视野内' })
     return
   }
 
   const [
-    leftShoulder, leftElbow, leftWrist, leftHip, leftKnee, leftAnkle,
-    rightShoulder, rightElbow, rightWrist, rightHip, rightKnee, rightAnkle
+    leftShoulder,
+    leftElbow,
+    leftWrist,
+    leftHip,
+    leftKnee,
+    leftAnkle,
+    rightShoulder,
+    rightElbow,
+    rightWrist,
+    rightHip,
+    rightKnee,
+    rightAnkle,
   ] = foundKeypoints as poseDetection.Keypoint[]
 
   const leftElbowAngle = calculateAngle(leftShoulder, leftElbow, leftWrist)
@@ -45,14 +69,18 @@ export function detectSquat({
   const rightHipAngle = calculateAngle(rightShoulder, rightHip, rightKnee)
   const rightKneeAngle = calculateAngle(rightHip, rightKnee, rightAnkle)
 
-  const isCorrectSquat = 
-    leftHipAngle < 130 && rightHipAngle < 130 &&
-    leftElbowAngle > 130 && rightElbowAngle > 130 &&
-    leftShoulderAngle > 30 && leftShoulderAngle < 120 &&
-    rightShoulderAngle > 30 && rightShoulderAngle < 120
+  const isCorrectSquat =
+    leftHipAngle < 130 &&
+    rightHipAngle < 130 &&
+    leftElbowAngle > 130 &&
+    rightElbowAngle > 130 &&
+    leftShoulderAngle > 30 &&
+    leftShoulderAngle < 120 &&
+    rightShoulderAngle > 30 &&
+    rightShoulderAngle < 120
 
   if (isCorrectSquat && !isSquatting.current) {
-    setSquatCount(prev => prev + 1)
+    setSquatCount((prev) => prev + 1)
     isSquatting.current = true
     setFeedback({ isCorrect: true, message: '深蹲姿势正确！' })
   } else if (!isCorrectSquat && isSquatting.current) {
@@ -61,7 +89,16 @@ export function detectSquat({
 
   // Provide feedback
   if (!isCorrectSquat) {
-    const feedback = checkSquatForm(leftElbowAngle, leftShoulderAngle, rightElbowAngle, rightShoulderAngle, leftHipAngle, rightHipAngle, leftKneeAngle, rightKneeAngle)
+    const feedback = checkSquatForm(
+      leftElbowAngle,
+      leftShoulderAngle,
+      rightElbowAngle,
+      rightShoulderAngle,
+      leftHipAngle,
+      rightHipAngle,
+      leftKneeAngle,
+      rightKneeAngle
+    )
     setFeedback(feedback)
   }
 }
@@ -71,7 +108,8 @@ function calculateAngle(
   b: poseDetection.Keypoint,
   c: poseDetection.Keypoint
 ): number {
-  const radians = Math.atan2(c.y - b.y, c.x - b.x) - Math.atan2(a.y - b.y, a.x - b.x)
+  const radians =
+    Math.atan2(c.y - b.y, c.x - b.x) - Math.atan2(a.y - b.y, a.x - b.x)
   let angle = Math.abs((radians * 180.0) / Math.PI)
   if (angle > 180.0) angle = 360 - angle
   return angle
@@ -92,8 +130,10 @@ function checkSquatForm(
   }
 
   if (
-    leftShoulderAngle <= 30 || leftShoulderAngle >= 120 ||
-    rightShoulderAngle <= 30 || rightShoulderAngle >= 120
+    leftShoulderAngle <= 30 ||
+    leftShoulderAngle >= 120 ||
+    rightShoulderAngle <= 30 ||
+    rightShoulderAngle >= 120
   ) {
     return { isCorrect: false, message: 'Adjust your arm position' }
   }

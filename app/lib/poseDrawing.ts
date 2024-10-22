@@ -18,6 +18,14 @@ export function drawPose(
   ctx.translate(-ctx.canvas.width, 0)
 
   poses[0].keypoints.forEach((keypoint) => {
+    // Skip drawing for ears, nose, and eyes
+    if (
+      ['left_ear', 'right_ear', 'nose', 'left_eye', 'right_eye'].includes(
+        keypoint.name ?? ''
+      )
+    )
+      return
+
     if (keypoint.score && keypoint.score > 0) {
       ctx.beginPath()
       ctx.arc(keypoint.x, keypoint.y, 5, 0, 2 * Math.PI)

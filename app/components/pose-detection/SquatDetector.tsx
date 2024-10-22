@@ -68,10 +68,18 @@ export default function SquatDetector() {
     }
   }, [])
 
-  const detectSquatCallback = useCallback((pose: poseDetection.Pose) => {
-    const feedback = detectSquat({ pose, isSquatting, setSquatCount, setFeedback })
-    return feedback
-  }, [setSquatCount, setFeedback, isSquatting])
+  const detectSquatCallback = useCallback(
+    (pose: poseDetection.Pose) => {
+      const feedback = detectSquat({
+        pose,
+        isSquatting,
+        setSquatCount,
+        setFeedback,
+      })
+      return feedback
+    },
+    [setSquatCount, setFeedback, isSquatting]
+  )
 
   useEffect(() => {
     if (!detector || !webcamRef.current) return
