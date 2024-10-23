@@ -1,6 +1,6 @@
 import * as poseDetection from '@tensorflow-models/pose-detection'
 
-interface Feedback {
+export interface Feedback {
   isCorrect: boolean
   message: string
 }
@@ -11,6 +11,12 @@ export enum SquatPhase {
   STANDING,
   SQUATTING,
   RISING,
+}
+
+export interface SquatLog {
+  phase: SquatPhase
+  timestamp: number
+  imageData: string
 }
 
 export function detectSquat({

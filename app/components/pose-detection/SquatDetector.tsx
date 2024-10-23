@@ -4,16 +4,17 @@ import { useRef, useState, useEffect, useCallback } from 'react'
 
 import * as tf from '@tensorflow/tfjs-core'
 import * as poseDetection from '@tensorflow-models/pose-detection'
+import Image from 'next/image'
 import Webcam from 'react-webcam'
 
 import '@tensorflow/tfjs-backend-webgl'
 import { drawPose as dp } from '@/app/lib/poseDrawing'
-import { detectSquat, SquatPhase } from '@/app/lib/squatDetection'
-
-interface SquatFeedback {
-  isCorrect: boolean
-  message: string
-}
+import {
+  detectSquat,
+  SquatPhase,
+  SquatLog,
+  Feedback,
+} from '@/app/lib/squatDetection'
 
 export default function SquatDetector() {
   const webcamRef = useRef<Webcam>(null)
@@ -23,14 +24,37 @@ export default function SquatDetector() {
   )
   const [fps, setFps] = useState<number>(0)
   const [squatCount, setSquatCount] = useState<number>(0)
-  const [feedback, setFeedback] = useState<SquatFeedback>({
+  const [feedback, setFeedback] = useState<Feedback>({
     isCorrect: true,
     message: 'Start squatting!',
   })
   const squatPhase = useRef<SquatPhase>(SquatPhase.STANDING)
+  const [squatLogs, setSquatLogs] = useState<SquatLog[]>([])
 
   const frameCount = useRef<number>(0)
   const lastFpsUpdateTime = useRef<number>(performance.now())
+
+  const captureScreenshot = useCallback(() => {
+    if (!webcamRef.current) return ''
+    return webcamRef.current.getScreenshot()
+  }, [])
+
+  const addSquatLog = useCallback(
+    (phase: SquatPhase) => {
+      const screenshot = captureScreenshot()
+      if (!screenshot) return
+
+      setSquatLogs((prev) => [
+        ...prev,
+        {
+          phase,
+          timestamp: Date.now(),
+          imageData: screenshot,
+        },
+      ])
+    },
+    [captureScreenshot]
+  )
 
   useEffect(() => {
     async function initDetector() {
@@ -75,9 +99,10 @@ export default function SquatDetector() {
         squatPhase,
         setSquatCount,
         setFeedback,
+        onPhaseComplete: addSquatLog,
       })
     },
-    [setSquatCount, setFeedback]
+    [setSquatCount, setFeedback, addSquatLog]
   )
 
   useEffect(() => {
@@ -110,20 +135,46 @@ export default function SquatDetector() {
   }, [detector, drawPose, updateFps, detectSquatCallback])
 
   return (
-    <div className="relative">
-      <div
-        className={`absolute inset-0 border-4 ${feedback.isCorrect ? 'border-green-500' : 'border-red-500'} z-10`}
-      ></div>
-      <Webcam ref={webcamRef} className="w-full" mirrored />
-      <canvas ref={canvasRef} className="absolute top-0 left-0 w-full h-full" />
-      <div className="absolute top-2 left-2 bg-black bg-opacity-50 text-white p-2 rounded">
-        FPS: {fps}
+    <div className="flex flex-col gap-4">
+      <div className="relative">
+        <div
+          className={`absolute inset-0 border-4 ${feedback.isCorrect ? 'border-green-500' : 'border-red-500'} z-10`}
+        ></div>
+        <Webcam ref={webcamRef} className="w-full" mirrored />
+        <canvas
+          ref={canvasRef}
+          className="absolute top-0 left-0 w-full h-full"
+        />
+        <div className="absolute top-2 left-2 bg-black bg-opacity-50 text-white p-2 rounded">
+          FPS: {fps}
+        </div>
+        <div className="absolute top-2 right-2 bg-black bg-opacity-50 text-white p-2 rounded">
+          Squats: {squatCount}
+        </div>
+        <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-50 text-white p-2 rounded">
+          {feedback.message}
+        </div>
       </div>
-      <div className="absolute top-2 right-2 bg-black bg-opacity-50 text-white p-2 rounded">
-        Squats: {squatCount}
-      </div>
-      <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-50 text-white p-2 rounded">
-        {feedback.message}
+
+      {/* Squat Log Display */}
+      <div className="bg-gray-100 p-4 rounded-lg">
+        <h2 className="text-lg font-semibold mb-4">深蹲记录</h2>
+        <div className="grid grid-cols-3 gap-4">
+          {squatLogs.map((log, index) => (
+            <div key={log.timestamp} className="flex flex-col items-center">
+              <Image
+                src={log.imageData}
+                alt={`${SquatPhase[log.phase]} - ${Math.floor(index / 3 + 1)}`}
+                width={500} // Set appropriate width
+                height={300} // Set appropriate height
+                className="w-full h-auto rounded"
+              />
+              <span className="mt-2 text-sm">
+                {SquatPhase[log.phase]} - 第{Math.floor(index / 3 + 1)}组
+              </span>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   )
