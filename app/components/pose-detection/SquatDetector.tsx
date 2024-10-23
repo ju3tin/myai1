@@ -10,6 +10,7 @@ import Webcam from 'react-webcam'
 import '@tensorflow/tfjs-backend-webgl'
 import { drawPose as dp } from '@/app/lib/poseDrawing'
 import {
+  countValidSquats,
   detectSquat,
   SquatPhase,
   SquatLog,
@@ -38,6 +39,14 @@ export default function SquatDetector() {
     if (!webcamRef.current) return ''
     return webcamRef.current.getScreenshot()
   }, [])
+
+  useEffect(() => {
+    console.log('detectSquat', squatLogs)
+    // Update squat count based on sequence validation
+    const newCount = countValidSquats(squatLogs)
+    setSquatCount(newCount)
+    console.log('newCount', newCount)
+  }, [squatLogs])
 
   const addSquatLog = useCallback(
     (phase: SquatPhase) => {
@@ -98,13 +107,11 @@ export default function SquatDetector() {
       detectSquat({
         pose,
         squatPhase,
-        setSquatCount,
         setFeedback,
         onPhaseComplete: addSquatLog,
-        squatLogs, // Pass squatLogs
       })
     },
-    [setSquatCount, setFeedback, addSquatLog, squatLogs]
+    [setFeedback, addSquatLog]
   )
 
   useEffect(() => {

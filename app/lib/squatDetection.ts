@@ -20,7 +20,7 @@ export interface SquatLog {
 }
 
 // Add new helper function to validate squat sequences
-function countValidSquats(logs: SquatLog[]): number {
+export function countValidSquats(logs: SquatLog[]): number {
   let count = 0
   let i = 0
 
@@ -35,7 +35,7 @@ function countValidSquats(logs: SquatLog[]): number {
       logs[i + 1].isValid = true
       logs[i + 2].isValid = true
       count++
-      i += 3 // Skip to next potential sequence
+      i += 2 // Skip to next potential sequence
     } else {
       i++
     }
@@ -47,17 +47,13 @@ function countValidSquats(logs: SquatLog[]): number {
 export function detectSquat({
   pose,
   squatPhase,
-  setSquatCount,
   setFeedback,
   onPhaseComplete,
-  squatLogs, // Add this parameter
 }: {
   pose: poseDetection.Pose
   squatPhase: React.MutableRefObject<SquatPhase>
-  setSquatCount: React.Dispatch<React.SetStateAction<number>>
   setFeedback: React.Dispatch<React.SetStateAction<Feedback>>
   onPhaseComplete: (phase: SquatPhase) => void
-  squatLogs: SquatLog[]
 }): void {
   const keypoints = [
     'left_shoulder',
@@ -104,24 +100,11 @@ export function detectSquat({
   const leftShoulderAngle = calculateAngle(leftElbow, leftShoulder, leftHip)
   const leftHipAngle = calculateAngle(leftShoulder, leftHip, leftKnee)
   const leftKneeAngle = calculateAngle(leftHip, leftKnee, leftAnkle)
-  console.log(
-    'left',
-    leftElbowAngle,
-    leftShoulderAngle,
-    leftHipAngle,
-    leftKneeAngle
-  )
+
   const rightElbowAngle = calculateAngle(rightShoulder, rightElbow, rightWrist)
   const rightShoulderAngle = calculateAngle(rightElbow, rightShoulder, rightHip)
   const rightHipAngle = calculateAngle(rightShoulder, rightHip, rightKnee)
   const rightKneeAngle = calculateAngle(rightHip, rightKnee, rightAnkle)
-  console.log(
-    'right',
-    rightElbowAngle,
-    rightShoulderAngle,
-    rightHipAngle,
-    rightKneeAngle
-  )
 
   const isStanding =
     leftHipAngle > 160 &&
@@ -143,14 +126,12 @@ export function detectSquat({
     rightShoulderAngle > 30 &&
     leftShoulderAngle < 90 &&
     rightShoulderAngle < 90
+  console.log('phrase', squatPhase.current)
   switch (squatPhase.current) {
     case SquatPhase.STANDING:
       if (isStanding) {
         onPhaseComplete(SquatPhase.STANDING)
         squatPhase.current = SquatPhase.SQUATTING
-        // Update squat count based on sequence validation
-        const newCount = countValidSquats(squatLogs)
-        setSquatCount(newCount)
       }
       break
     case SquatPhase.SQUATTING:
