@@ -50,6 +50,7 @@ export default function SquatDetector() {
           phase,
           timestamp: Date.now(),
           imageData: screenshot,
+          isValid: false, // Initially set as invalid
         },
       ])
     },
@@ -100,9 +101,10 @@ export default function SquatDetector() {
         setSquatCount,
         setFeedback,
         onPhaseComplete: addSquatLog,
+        squatLogs, // Pass squatLogs
       })
     },
-    [setSquatCount, setFeedback, addSquatLog]
+    [setSquatCount, setFeedback, addSquatLog, squatLogs]
   )
 
   useEffect(() => {
@@ -156,21 +158,27 @@ export default function SquatDetector() {
         </div>
       </div>
 
-      {/* Squat Log Display */}
+      {/* Update Squat Log Display to show validity */}
       <div className="bg-gray-100 p-4 rounded-lg">
         <h2 className="text-lg font-semibold mb-4">深蹲记录</h2>
         <div className="grid grid-cols-3 gap-4">
           {squatLogs.map((log, index) => (
-            <div key={log.timestamp} className="flex flex-col items-center">
+            <div
+              key={log.timestamp}
+              className={`flex flex-col items-center ${
+                log.isValid ? 'border-2 border-green-500' : ''
+              }`}
+            >
               <Image
                 src={log.imageData}
                 alt={`${SquatPhase[log.phase]} - ${Math.floor(index / 3 + 1)}`}
-                width={500} // Set appropriate width
-                height={300} // Set appropriate height
+                width={500}
+                height={300}
                 className="w-full h-auto rounded"
               />
               <span className="mt-2 text-sm">
                 {SquatPhase[log.phase]} - 第{Math.floor(index / 3 + 1)}组
+                {log.isValid && ' ✓'}
               </span>
             </div>
           ))}

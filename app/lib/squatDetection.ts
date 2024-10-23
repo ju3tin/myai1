@@ -10,13 +10,38 @@ const CONFIDENCE_THRESHOLD = 0.3
 export enum SquatPhase {
   STANDING,
   SQUATTING,
-  RISING,
 }
 
 export interface SquatLog {
   phase: SquatPhase
   timestamp: number
   imageData: string
+  isValid?: boolean // Add this to mark valid sequences
+}
+
+// Add new helper function to validate squat sequences
+function countValidSquats(logs: SquatLog[]): number {
+  let count = 0
+  let i = 0
+
+  while (i < logs.length - 2) {
+    if (
+      logs[i].phase === SquatPhase.STANDING &&
+      logs[i + 1].phase === SquatPhase.SQUATTING &&
+      logs[i + 2].phase === SquatPhase.STANDING
+    ) {
+      // Mark the sequence as valid
+      logs[i].isValid = true
+      logs[i + 1].isValid = true
+      logs[i + 2].isValid = true
+      count++
+      i += 3 // Skip to next potential sequence
+    } else {
+      i++
+    }
+  }
+
+  return count
 }
 
 export function detectSquat({
@@ -24,11 +49,15 @@ export function detectSquat({
   squatPhase,
   setSquatCount,
   setFeedback,
+  onPhaseComplete,
+  squatLogs, // Add this parameter
 }: {
   pose: poseDetection.Pose
   squatPhase: React.MutableRefObject<SquatPhase>
   setSquatCount: React.Dispatch<React.SetStateAction<number>>
   setFeedback: React.Dispatch<React.SetStateAction<Feedback>>
+  onPhaseComplete: (phase: SquatPhase) => void
+  squatLogs: SquatLog[]
 }): void {
   const keypoints = [
     'left_shoulder',
@@ -75,52 +104,53 @@ export function detectSquat({
   const leftShoulderAngle = calculateAngle(leftElbow, leftShoulder, leftHip)
   const leftHipAngle = calculateAngle(leftShoulder, leftHip, leftKnee)
   const leftKneeAngle = calculateAngle(leftHip, leftKnee, leftAnkle)
-
+  console.log('left', leftElbowAngle, leftShoulderAngle, leftHipAngle, leftKneeAngle)
   const rightElbowAngle = calculateAngle(rightShoulder, rightElbow, rightWrist)
   const rightShoulderAngle = calculateAngle(rightElbow, rightShoulder, rightHip)
   const rightHipAngle = calculateAngle(rightShoulder, rightHip, rightKnee)
   const rightKneeAngle = calculateAngle(rightHip, rightKnee, rightAnkle)
+  console.log('right', rightElbowAngle, rightShoulderAngle, rightHipAngle, rightKneeAngle)
 
   const isStanding =
     leftHipAngle > 160 &&
     rightHipAngle > 160 &&
     leftKneeAngle > 160 &&
-    rightKneeAngle > 160
+    rightKneeAngle > 160 &&
+    leftElbowAngle > 160 &&
+    rightElbowAngle > 160 &&
+    leftShoulderAngle < 20 &&
+    rightShoulderAngle < 20
   const isSquatting =
-    leftHipAngle < 100 &&
-    rightHipAngle < 100 &&
-    leftKneeAngle < 100 &&
-    rightKneeAngle < 100
-  const isRising =
-    leftHipAngle > 100 &&
-    leftHipAngle < 160 &&
-    rightHipAngle > 100 &&
-    rightHipAngle < 160
-
+    leftHipAngle < 170 &&
+    rightHipAngle < 170 &&
+    leftKneeAngle < 170 &&
+    rightKneeAngle < 170 &&
+    leftElbowAngle > 130 &&
+    rightElbowAngle > 130 &&
+    leftShoulderAngle > 30 &&
+    rightShoulderAngle > 30 &&
+    leftShoulderAngle < 90 &&
+    rightShoulderAngle < 90
   switch (squatPhase.current) {
     case SquatPhase.STANDING:
-      if (isSquatting) {
+      if (isStanding) {
+        onPhaseComplete(SquatPhase.STANDING)
         squatPhase.current = SquatPhase.SQUATTING
-        setFeedback({ isCorrect: true, message: '下蹲姿势正确！' })
+        // Update squat count based on sequence validation
+        const newCount = countValidSquats(squatLogs)
+        setSquatCount(newCount)
       }
       break
     case SquatPhase.SQUATTING:
-      if (isRising) {
-        squatPhase.current = SquatPhase.RISING
-        setFeedback({ isCorrect: true, message: '开始起身！' })
-      }
-      break
-    case SquatPhase.RISING:
-      if (isStanding) {
+      if (isSquatting) {
+        onPhaseComplete(SquatPhase.SQUATTING)
         squatPhase.current = SquatPhase.STANDING
-        setSquatCount((prev) => prev + 1)
-        setFeedback({ isCorrect: true, message: '完成一次深蹲！' })
+        setFeedback({ isCorrect: true, message: '下蹲姿势正确！' })
       }
       break
   }
-
   // Provide feedback
-  if (!isStanding && !isSquatting && !isRising) {
+  if (!isStanding && !isSquatting) {
     const feedback = checkSquatForm(
       leftElbowAngle,
       leftShoulderAngle,
