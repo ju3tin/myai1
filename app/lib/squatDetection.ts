@@ -104,12 +104,24 @@ export function detectSquat({
   const leftShoulderAngle = calculateAngle(leftElbow, leftShoulder, leftHip)
   const leftHipAngle = calculateAngle(leftShoulder, leftHip, leftKnee)
   const leftKneeAngle = calculateAngle(leftHip, leftKnee, leftAnkle)
-  console.log('left', leftElbowAngle, leftShoulderAngle, leftHipAngle, leftKneeAngle)
+  console.log(
+    'left',
+    leftElbowAngle,
+    leftShoulderAngle,
+    leftHipAngle,
+    leftKneeAngle
+  )
   const rightElbowAngle = calculateAngle(rightShoulder, rightElbow, rightWrist)
   const rightShoulderAngle = calculateAngle(rightElbow, rightShoulder, rightHip)
   const rightHipAngle = calculateAngle(rightShoulder, rightHip, rightKnee)
   const rightKneeAngle = calculateAngle(rightHip, rightKnee, rightAnkle)
-  console.log('right', rightElbowAngle, rightShoulderAngle, rightHipAngle, rightKneeAngle)
+  console.log(
+    'right',
+    rightElbowAngle,
+    rightShoulderAngle,
+    rightHipAngle,
+    rightKneeAngle
+  )
 
   const isStanding =
     leftHipAngle > 160 &&
