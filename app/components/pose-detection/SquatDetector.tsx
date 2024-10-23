@@ -8,7 +8,7 @@ import Webcam from 'react-webcam'
 
 import '@tensorflow/tfjs-backend-webgl'
 import { drawPose as dp } from '@/app/lib/poseDrawing'
-import { detectSquat } from '@/app/lib/squatDetection'
+import { detectSquat, SquatPhase } from '@/app/lib/squatDetection'
 
 interface SquatFeedback {
   isCorrect: boolean
@@ -27,10 +27,10 @@ export default function SquatDetector() {
     isCorrect: true,
     message: 'Start squatting!',
   })
+  const squatPhase = useRef<SquatPhase>(SquatPhase.STANDING)
 
   const frameCount = useRef<number>(0)
   const lastFpsUpdateTime = useRef<number>(performance.now())
-  const isSquatting = useRef<boolean>(false)
 
   useEffect(() => {
     async function initDetector() {
@@ -70,15 +70,14 @@ export default function SquatDetector() {
 
   const detectSquatCallback = useCallback(
     (pose: poseDetection.Pose) => {
-      const feedback = detectSquat({
+      detectSquat({
         pose,
-        isSquatting,
+        squatPhase,
         setSquatCount,
         setFeedback,
       })
-      return feedback
     },
-    [setSquatCount, setFeedback, isSquatting]
+    [setSquatCount, setFeedback]
   )
 
   useEffect(() => {

@@ -7,14 +7,20 @@ interface Feedback {
 
 const CONFIDENCE_THRESHOLD = 0.3
 
+export enum SquatPhase {
+  STANDING,
+  SQUATTING,
+  RISING,
+}
+
 export function detectSquat({
   pose,
-  isSquatting,
+  squatPhase,
   setSquatCount,
   setFeedback,
 }: {
   pose: poseDetection.Pose
-  isSquatting: React.MutableRefObject<boolean>
+  squatPhase: React.MutableRefObject<SquatPhase>
   setSquatCount: React.Dispatch<React.SetStateAction<number>>
   setFeedback: React.Dispatch<React.SetStateAction<Feedback>>
 }): void {
@@ -69,26 +75,46 @@ export function detectSquat({
   const rightHipAngle = calculateAngle(rightShoulder, rightHip, rightKnee)
   const rightKneeAngle = calculateAngle(rightHip, rightKnee, rightAnkle)
 
-  const isCorrectSquat =
-    leftHipAngle < 130 &&
-    rightHipAngle < 130 &&
-    leftElbowAngle > 130 &&
-    rightElbowAngle > 130 &&
-    leftShoulderAngle > 30 &&
-    leftShoulderAngle < 120 &&
-    rightShoulderAngle > 30 &&
-    rightShoulderAngle < 120
+  const isStanding =
+    leftHipAngle > 160 &&
+    rightHipAngle > 160 &&
+    leftKneeAngle > 160 &&
+    rightKneeAngle > 160
+  const isSquatting =
+    leftHipAngle < 100 &&
+    rightHipAngle < 100 &&
+    leftKneeAngle < 100 &&
+    rightKneeAngle < 100
+  const isRising =
+    leftHipAngle > 100 &&
+    leftHipAngle < 160 &&
+    rightHipAngle > 100 &&
+    rightHipAngle < 160
 
-  if (isCorrectSquat && !isSquatting.current) {
-    setSquatCount((prev) => prev + 1)
-    isSquatting.current = true
-    setFeedback({ isCorrect: true, message: '深蹲姿势正确！' })
-  } else if (!isCorrectSquat && isSquatting.current) {
-    isSquatting.current = false
+  switch (squatPhase.current) {
+    case SquatPhase.STANDING:
+      if (isSquatting) {
+        squatPhase.current = SquatPhase.SQUATTING
+        setFeedback({ isCorrect: true, message: '下蹲姿势正确！' })
+      }
+      break
+    case SquatPhase.SQUATTING:
+      if (isRising) {
+        squatPhase.current = SquatPhase.RISING
+        setFeedback({ isCorrect: true, message: '开始起身！' })
+      }
+      break
+    case SquatPhase.RISING:
+      if (isStanding) {
+        squatPhase.current = SquatPhase.STANDING
+        setSquatCount((prev) => prev + 1)
+        setFeedback({ isCorrect: true, message: '完成一次深蹲！' })
+      }
+      break
   }
 
   // Provide feedback
-  if (!isCorrectSquat) {
+  if (!isStanding && !isSquatting && !isRising) {
     const feedback = checkSquatForm(
       leftElbowAngle,
       leftShoulderAngle,
