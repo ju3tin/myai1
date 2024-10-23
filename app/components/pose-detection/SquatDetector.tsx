@@ -171,7 +171,7 @@ export default function SquatDetector() {
         <div className="flex flex-col gap-4">
           {/* First row - 3 images */}
           <div className="grid grid-cols-3 gap-4">
-            {squatLogs.slice(0, 3).map((log, index) => (
+            {squatLogs.slice(0, 3).map((log) => (
               <div
                 key={log.timestamp}
                 className={`flex flex-col items-center ${
@@ -194,30 +194,34 @@ export default function SquatDetector() {
           </div>
 
           {/* Subsequent rows - 2 images each */}
-          {Array.from({ length: Math.ceil((squatLogs.length - 3) / 2) }).map((_, rowIndex) => (
-            <div key={rowIndex} className="grid grid-cols-2 gap-4">
-              {squatLogs.slice(3 + rowIndex * 2, 5 + rowIndex * 2).map((log) => (
-                <div
-                  key={log.timestamp}
-                  className={`flex flex-col items-center ${
-                    log.isValid ? 'border-2 border-green-500' : ''
-                  }`}
-                >
-                  <Image
-                    src={log.imageData}
-                    alt={`${SquatPhase[log.phase]} - 第${rowIndex + 2}组`}
-                    width={500}
-                    height={300}
-                    className="w-full h-auto rounded"
-                  />
-                  <span className="mt-2 text-sm">
-                    {SquatPhase[log.phase]} - 第{rowIndex + 2}组
-                    {log.isValid && ' ✓'}
-                  </span>
-                </div>
-              ))}
-            </div>
-          ))}
+          {Array.from({ length: Math.ceil((squatLogs.length - 3) / 2) }).map(
+            (_, rowIndex) => (
+              <div key={rowIndex} className="grid grid-cols-2 gap-4">
+                {squatLogs
+                  .slice(3 + rowIndex * 2, 5 + rowIndex * 2)
+                  .map((log) => (
+                    <div
+                      key={log.timestamp}
+                      className={`flex flex-col items-center ${
+                        log.isValid ? 'border-2 border-green-500' : ''
+                      }`}
+                    >
+                      <Image
+                        src={log.imageData}
+                        alt={`${SquatPhase[log.phase]} - 第${rowIndex + 2}组`}
+                        width={500}
+                        height={300}
+                        className="w-full h-auto rounded"
+                      />
+                      <span className="mt-2 text-sm">
+                        {SquatPhase[log.phase]} - 第{rowIndex + 2}组
+                        {log.isValid && ' ✓'}
+                      </span>
+                    </div>
+                  ))}
+              </div>
+            )
+          )}
         </div>
       </div>
     </div>
