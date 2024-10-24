@@ -15,6 +15,7 @@ import {
   CardTitle,
 } from '@/app/components/ui/card'
 import { drawPose } from '@/app/lib/poseDrawing'
+import { checkPose } from '@/app/lib/squatDetection'
 
 import { PoseLogEntry } from './types'
 
@@ -36,7 +37,6 @@ interface WebcamViewProps {
   targetCanvasRef: RefObject<HTMLCanvasElement>
   onSimilarityUpdate: (similarity: number) => void
   similarityMethod: string
-  coordinateSystem: string
   onLogEntry: (entry: PoseLogEntry) => void
 }
 
@@ -45,7 +45,6 @@ export function WebcamView({
   targetCanvasRef,
   onSimilarityUpdate,
   similarityMethod,
-  coordinateSystem,
   onLogEntry,
 }: WebcamViewProps) {
   const webcamRef = useRef<Webcam>(null)
@@ -124,6 +123,10 @@ export function WebcamView({
 
   const calculateSimilarity = useCallback(
     (pose: poseDetection.Pose) => {
+      if (!checkPose({ pose })) {
+        console.log('we need full body!')
+        return
+      }
       if (targetPose) {
         const convertToPSPose = (p: poseDetection.Pose): PSPose => ({
           keypoints: p.keypoints.map((kp) => ({
@@ -136,11 +139,6 @@ export function WebcamView({
         const psPose = convertToPSPose(pose)
         const psTargetPose = convertToPSPose(targetPose)
 
-        // Apply coordinate system transformation if needed
-        if (coordinateSystem !== 'default') {
-          // Implement coordinate system transformation logic here
-          // This might involve adjusting the keypoint positions based on the selected origin
-        }
         const strategyMap: Record<
           string,
           'cosineDistance' | 'weightedDistance' | 'cosineSimilarity'
@@ -162,13 +160,7 @@ export function WebcamView({
         }
       }
     },
-    [
-      targetPose,
-      onSimilarityUpdate,
-      similarityMethod,
-      coordinateSystem,
-      logPoseIfNeeded,
-    ]
+    [targetPose, onSimilarityUpdate, similarityMethod, logPoseIfNeeded]
   )
 
   useEffect(() => {

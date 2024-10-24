@@ -43,6 +43,37 @@ export function countValidSquats(logs: SquatLog[]): number {
 
   return count
 }
+const keypoints = [
+  'left_shoulder',
+  'left_elbow',
+  'left_wrist',
+  'left_hip',
+  'left_knee',
+  'left_ankle',
+  'right_shoulder',
+  'right_elbow',
+  'right_wrist',
+  'right_hip',
+  'right_knee',
+  'right_ankle',
+]
+
+export function checkPose({
+  pose,
+  confidence = CONFIDENCE_THRESHOLD,
+}: {
+  pose: poseDetection.Pose
+  confidence?: number
+}): boolean {
+  const foundKeypoints = keypoints.map((name) =>
+    pose.keypoints.find((kp) => kp.name === name)
+  )
+
+  if (foundKeypoints.some((kp) => !kp || (kp.score ?? 0) < confidence)) {
+    return false
+  }
+  return true
+}
 
 export function detectSquat({
   pose,
@@ -55,21 +86,6 @@ export function detectSquat({
   setFeedback: React.Dispatch<React.SetStateAction<Feedback>>
   onPhaseComplete: (phase: SquatPhase) => void
 }): void {
-  const keypoints = [
-    'left_shoulder',
-    'left_elbow',
-    'left_wrist',
-    'left_hip',
-    'left_knee',
-    'left_ankle',
-    'right_shoulder',
-    'right_elbow',
-    'right_wrist',
-    'right_hip',
-    'right_knee',
-    'right_ankle',
-  ]
-
   const foundKeypoints = keypoints.map((name) =>
     pose.keypoints.find((kp) => kp.name === name)
   )

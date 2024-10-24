@@ -45,8 +45,8 @@ function LogEntry({ entry }: { entry: PoseLogEntry }) {
           <Image
             src={entry.screenshot}
             alt="Pose screenshot"
-            width={128}
-            height={128}
+            width={500}
+            height={500}
             className="object-cover rounded cursor-pointer" // Added cursor pointer
           />
         </PopoverTrigger>
@@ -54,8 +54,8 @@ function LogEntry({ entry }: { entry: PoseLogEntry }) {
           <Image
             src={entry.screenshot}
             alt="Enlarged Pose screenshot"
-            width={1000} // Set appropriate enlarged width
-            height={1000} // Set appropriate enlarged height
+            width={500} // Set appropriate enlarged width
+            height={500} // Set appropriate enlarged height
             className="object-cover rounded"
           />
         </PopoverContent>
