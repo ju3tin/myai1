@@ -10,6 +10,11 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/app/components/ui/collapsible'
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from '@/app/components/ui/popover'
 import { ScrollArea } from '@/app/components/ui/scroll-area'
 
 import { PoseLogEntry } from './types'
@@ -20,7 +25,7 @@ interface LogViewProps {
 
 export function LogView({ logs }: LogViewProps) {
   return (
-    <ScrollArea className="h-[400px] w-full rounded-md border p-4">
+    <ScrollArea className="w-full rounded-md border p-4">
       <div className="space-y-4">
         {logs.map((log) => (
           <LogEntry key={log.id} entry={log} />
@@ -35,20 +40,33 @@ function LogEntry({ entry }: { entry: PoseLogEntry }) {
 
   return (
     <div className="flex items-start space-x-4 p-4 border rounded-lg">
-      <Image
-        src={entry.screenshot}
-        alt="Pose screenshot"
-        width={128} // Set appropriate width
-        height={128} // Set appropriate height
-        className="object-cover rounded"
-      />
+      <Popover>
+        <PopoverTrigger asChild>
+          <Image
+            src={entry.screenshot}
+            alt="Pose screenshot"
+            width={128}
+            height={128}
+            className="object-cover rounded cursor-pointer" // Added cursor pointer
+          />
+        </PopoverTrigger>
+        <PopoverContent>
+          <Image
+            src={entry.screenshot}
+            alt="Enlarged Pose screenshot"
+            width={1000} // Set appropriate enlarged width
+            height={1000} // Set appropriate enlarged height
+            className="object-cover rounded"
+          />
+        </PopoverContent>
+      </Popover>
       <div className="flex-1">
         <div className="flex justify-between items-center mb-2">
           <span className="text-sm text-gray-500">
             {format(entry.timestamp, 'HH:mm:ss')}
           </span>
           <span className="font-semibold">
-            Similarity: {entry.similarity.toFixed(4)}
+            Similarity: {entry.similarity.toFixed(8)}
           </span>
         </div>
         <Collapsible open={isOpen} onOpenChange={setIsOpen}>

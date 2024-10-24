@@ -105,19 +105,8 @@ export function WebcamView({
     async (pose: poseDetection.Pose, similarity: number) => {
       const now = Date.now()
       if (similarity < 0.5 && now - lastLogTime.current >= 2000) {
-        const video = webcamRef.current?.video
-        if (!video) return
-
-        // Capture screenshot
-        const canvas = document.createElement('canvas')
-        canvas.width = video.videoWidth
-        canvas.height = video.videoHeight
-        const ctx = canvas.getContext('2d')
-        if (!ctx) return
-
-        ctx.drawImage(video, 0, 0)
-        const screenshot = canvas.toDataURL('image/jpeg')
-
+        if (!webcamRef.current) return ''
+        const screenshot = webcamRef.current.getScreenshot() || ''
         const logEntry: PoseLogEntry = {
           id: crypto.randomUUID(),
           timestamp: now,
@@ -291,11 +280,10 @@ export function WebcamView({
   return (
     <Card className="flex flex-col">
       <CardHeader className="flex-shrink-0">
-        <CardTitle>Pose Detection</CardTitle>
+        <CardTitle>Webcam View</CardTitle>
       </CardHeader>
       <CardContent className="flex-grow flex flex-row p-2 overflow-hidden">
         <div className="flex-1 relative">
-          <h3 className="text-lg font-semibold mb-2">Webcam View</h3>
           {isLoading && (
             <p className="absolute inset-0 flex items-center justify-center">
               Loading camera...
