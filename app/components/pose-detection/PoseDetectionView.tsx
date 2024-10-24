@@ -18,8 +18,10 @@ import {
   CardTitle,
 } from '@/app/components/ui/card'
 
+import { LogView } from './LogView'
 import { Settings } from './Settings'
 import { TargetImage } from './TargetImage'
+import { PoseLogEntry } from './types'
 import { WebcamView } from './WebcamView'
 
 interface DataPoint {
@@ -39,6 +41,7 @@ export function PoseDetectionView() {
   const [similarityData, setSimilarityData] = useState<DataPoint[]>(initialData)
   const [similarityMethod, setSimilarityMethod] = useState('cosineDistance')
   const [coordinateSystem, setCoordinateSystem] = useState('default')
+  const [logs, setLogs] = useState<PoseLogEntry[]>([])
 
   const handleSimilarityUpdate = useCallback((similarity: number) => {
     setSimilarityData((prevData) => {
@@ -47,77 +50,87 @@ export function PoseDetectionView() {
     })
   }, [])
 
+  const handleLogEntry = useCallback((entry: PoseLogEntry) => {
+    setLogs((prevLogs) => [...prevLogs, entry])
+  }, [])
+
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)] min-h-[calc(100vh-4rem)]">
-      <div className="flex-1 flex p-4 space-x-4">
-        <div className="w-1/3 flex flex-col h-full min-h-full">
-          <div className="mb-4">
-            <Settings
-              similarityMethod={similarityMethod}
-              setSimilarityMethod={setSimilarityMethod}
-              coordinateSystem={coordinateSystem}
-              setCoordinateSystem={setCoordinateSystem}
-            />
+      <div className="flex-1 flex flex-col p-4">
+        <div className="flex space-x-4 mb-4">
+          <div className="w-1/3 flex flex-col h-full min-h-full">
+            <div className="mb-4">
+              <Settings
+                similarityMethod={similarityMethod}
+                setSimilarityMethod={setSimilarityMethod}
+                coordinateSystem={coordinateSystem}
+                setCoordinateSystem={setCoordinateSystem}
+              />
+            </div>
+            <div className="mb-4">
+              <Card className="">
+                <CardHeader>
+                  <CardTitle>Similarity Chart</CardTitle>
+                </CardHeader>
+                <CardContent className="h-[300px]">
+                  {' '}
+                  {/* 设置固定高度 */}
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart
+                      data={similarityData}
+                      margin={{ top: 5, right: 5, left: 5, bottom: 5 }}
+                    >
+                      <XAxis
+                        dataKey="time"
+                        type="number"
+                        domain={['dataMin', 'dataMax']}
+                        tickFormatter={(unixTime) =>
+                          new Date(unixTime).toLocaleTimeString([], {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })
+                        }
+                        interval="preserveStartEnd"
+                      />
+                      <YAxis domain={[0, 1]} />
+                      <Tooltip
+                        labelFormatter={(label) =>
+                          new Date(label).toLocaleTimeString()
+                        }
+                        formatter={(value: number) => value.toFixed(4)}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="similarity"
+                        stroke="#8884d8"
+                        dot={false}
+                        isAnimationActive={false}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            </div>
+            <div className="">
+              <WebcamView
+                targetImageRef={targetImageRef}
+                targetCanvasRef={targetCanvasRef}
+                onSimilarityUpdate={handleSimilarityUpdate}
+                similarityMethod={similarityMethod}
+                coordinateSystem={coordinateSystem}
+                onLogEntry={handleLogEntry}
+              />
+            </div>
           </div>
-          <div className="mb-4">
-            <Card className="">
-              <CardHeader>
-                <CardTitle>Similarity Chart</CardTitle>
-              </CardHeader>
-              <CardContent className="h-[300px]">
-                {' '}
-                {/* 设置固定高度 */}
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart
-                    data={similarityData}
-                    margin={{ top: 5, right: 5, left: 5, bottom: 5 }}
-                  >
-                    <XAxis
-                      dataKey="time"
-                      type="number"
-                      domain={['dataMin', 'dataMax']}
-                      tickFormatter={(unixTime) =>
-                        new Date(unixTime).toLocaleTimeString([], {
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })
-                      }
-                      interval="preserveStartEnd"
-                    />
-                    <YAxis domain={[0, 1]} />
-                    <Tooltip
-                      labelFormatter={(label) =>
-                        new Date(label).toLocaleTimeString()
-                      }
-                      formatter={(value: number) => value.toFixed(4)}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="similarity"
-                      stroke="#8884d8"
-                      dot={false}
-                      isAnimationActive={false}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          </div>
-          <div className="">
-            <WebcamView
+          <div className="flex-1 relative h-full min-h-full">
+            <TargetImage
               targetImageRef={targetImageRef}
               targetCanvasRef={targetCanvasRef}
-              onSimilarityUpdate={handleSimilarityUpdate}
-              similarityMethod={similarityMethod}
-              coordinateSystem={coordinateSystem}
             />
           </div>
         </div>
-        <div className="flex-1 relative h-full min-h-full">
-          <TargetImage
-            targetImageRef={targetImageRef}
-            targetCanvasRef={targetCanvasRef}
-          />
+        <div className="mt-4">
+          <LogView logs={logs} />
         </div>
       </div>
     </div>

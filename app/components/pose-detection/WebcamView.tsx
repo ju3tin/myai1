@@ -16,6 +16,8 @@ import {
 } from '@/app/components/ui/card'
 import { drawPose } from '@/app/lib/poseDrawing'
 
+import { PoseLogEntry } from './types'
+
 export interface PSPose {
   keypoints: PSKeypoint[]
 }
@@ -35,6 +37,7 @@ interface WebcamViewProps {
   onSimilarityUpdate: (similarity: number) => void
   similarityMethod: string
   coordinateSystem: string
+  onLogEntry: (entry: PoseLogEntry) => void
 }
 
 export function WebcamView({
@@ -43,6 +46,7 @@ export function WebcamView({
   onSimilarityUpdate,
   similarityMethod,
   coordinateSystem,
+  onLogEntry,
 }: WebcamViewProps) {
   const webcamRef = useRef<Webcam>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -55,6 +59,7 @@ export function WebcamView({
   const frameCount = useRef<number>(0)
   const lastFpsUpdateTime = useRef<number>(0)
   const [targetPose, setTargetPose] = useState<poseDetection.Pose | null>(null)
+  const lastLogTime = useRef<number>(0)
 
   useEffect(() => {
     lastFpsUpdateTime.current = performance.now()
@@ -96,6 +101,38 @@ export function WebcamView({
     initDetector()
   }, [])
 
+  const logPoseIfNeeded = useCallback(
+    async (pose: poseDetection.Pose, similarity: number) => {
+      const now = Date.now()
+      if (similarity < 0.5 && now - lastLogTime.current >= 2000) {
+        const video = webcamRef.current?.video
+        if (!video) return
+
+        // Capture screenshot
+        const canvas = document.createElement('canvas')
+        canvas.width = video.videoWidth
+        canvas.height = video.videoHeight
+        const ctx = canvas.getContext('2d')
+        if (!ctx) return
+
+        ctx.drawImage(video, 0, 0)
+        const screenshot = canvas.toDataURL('image/jpeg')
+
+        const logEntry: PoseLogEntry = {
+          id: crypto.randomUUID(),
+          timestamp: now,
+          screenshot,
+          pose,
+          similarity,
+        }
+
+        onLogEntry(logEntry)
+        lastLogTime.current = now
+      }
+    },
+    [onLogEntry]
+  )
+
   const calculateSimilarity = useCallback(
     (pose: poseDetection.Pose) => {
       if (targetPose) {
@@ -130,12 +167,19 @@ export function WebcamView({
 
         if (typeof similarity === 'number') {
           onSimilarityUpdate(similarity)
+          logPoseIfNeeded(pose, similarity)
         } else {
           console.error('Similarity calculation error:', similarity)
         }
       }
     },
-    [targetPose, onSimilarityUpdate, similarityMethod, coordinateSystem]
+    [
+      targetPose,
+      onSimilarityUpdate,
+      similarityMethod,
+      coordinateSystem,
+      logPoseIfNeeded,
+    ]
   )
 
   useEffect(() => {
