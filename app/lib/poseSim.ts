@@ -121,8 +121,10 @@ export function calculatePoseSimilarity(
   let totalAngleDiff = 0
 
   for (let i = 0; i < originAngles.length; i++) {
-    if (originAngles[i] !== null && targetAngles[i] !== null) {
-      const angleDiff = Math.abs(originAngles[i] - targetAngles[i])
+    const originAngle = originAngles[i]
+    const targetAngle = targetAngles[i]
+    if (originAngle != null && targetAngle != null) {
+      const angleDiff = Math.abs(originAngle - targetAngle)
       totalAngleDiff += angleDiff
     }
   }
