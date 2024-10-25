@@ -28,7 +28,7 @@ function calculateAngle(
 function getAngles(
   pose: poseDetection.Pose,
   selectedAngles: string[] = []
-): number[] {
+): (number | null)[] {
   const foundKeypoints = bodyKeypoints.map((name) =>
     pose.keypoints.find((kp) => kp.name === name)
   )
@@ -47,38 +47,63 @@ function getAngles(
     rightAnkle,
   ] = foundKeypoints as poseDetection.Keypoint[]
 
-  const angles: number[] = []
+  const angles: (number | null)[] = []
+  const calculateAngleWithConfidence = (
+    a: poseDetection.Keypoint,
+    b: poseDetection.Keypoint,
+    c: poseDetection.Keypoint
+  ): number | null => {
+    if (
+      a?.score &&
+      b?.score &&
+      c?.score &&
+      a.score >= 0.3 &&
+      b.score >= 0.3 &&
+      c.score >= 0.3
+    ) {
+      return calculateAngle(a, b, c)
+    }
+    return null
+  }
 
   if (selectedAngles.includes('leftElbowAngle')) {
-    angles.push(calculateAngle(leftShoulder, leftElbow, leftWrist))
+    angles.push(
+      calculateAngleWithConfidence(leftShoulder, leftElbow, leftWrist)
+    )
   }
 
   if (selectedAngles.includes('leftShoulderAngle')) {
-    angles.push(calculateAngle(leftElbow, leftShoulder, leftHip))
+    angles.push(calculateAngleWithConfidence(leftElbow, leftShoulder, leftHip))
   }
 
   if (selectedAngles.includes('leftHipAngle')) {
-    angles.push(calculateAngle(leftShoulder, leftHip, leftKnee))
+    angles.push(calculateAngleWithConfidence(leftShoulder, leftHip, leftKnee))
   }
 
   if (selectedAngles.includes('leftKneeAngle')) {
-    angles.push(calculateAngle(leftHip, leftKnee, leftAnkle))
+    angles.push(calculateAngleWithConfidence(leftHip, leftKnee, leftAnkle))
   }
 
   if (selectedAngles.includes('rightElbowAngle')) {
-    angles.push(calculateAngle(rightShoulder, rightElbow, rightWrist))
+    angles.push(
+      calculateAngleWithConfidence(rightShoulder, rightElbow, rightWrist)
+    )
   }
 
   if (selectedAngles.includes('rightShoulderAngle')) {
-    angles.push(calculateAngle(rightElbow, rightShoulder, rightHip))
+    angles.push(
+      calculateAngleWithConfidence(rightElbow, rightShoulder, rightHip)
+    )
   }
 
   if (selectedAngles.includes('rightHipAngle')) {
-    angles.push(calculateAngle(rightShoulder, rightHip, rightKnee))
+    angles.push(
+      calculateAngleWithConfidence(rightShoulder, rightHip, rightKnee)
+    )
   }
 
   if (selectedAngles.includes('rightKneeAngle')) {
-    angles.push(calculateAngle(rightHip, rightKnee, rightAnkle))
+    angles.push(calculateAngleWithConfidence(rightHip, rightKnee, rightAnkle))
   }
 
   return angles
@@ -94,18 +119,17 @@ export function calculatePoseSimilarity(
 
   // Calculate total angle difference and valid angles
   let totalAngleDiff = 0
-  let validAngles = 0
 
   for (let i = 0; i < originAngles.length; i++) {
     if (originAngles[i] !== null && targetAngles[i] !== null) {
       const angleDiff = Math.abs(originAngles[i] - targetAngles[i])
       totalAngleDiff += angleDiff
-      validAngles++
     }
   }
-
   // Calculate average angle difference and convert to similarity score
-  const avgAngleDiff = totalAngleDiff / validAngles
+  const allNull = originAngles.every((angle) => angle === null)
+  if (allNull) return 0
+  const avgAngleDiff = totalAngleDiff / originAngles.length
   const similarity = Math.max(0, 1 - avgAngleDiff / 180)
 
   return similarity
