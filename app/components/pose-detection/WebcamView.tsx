@@ -13,23 +13,13 @@ import {
   CardHeader,
   CardTitle,
 } from '@/app/components/ui/card'
+import { Checkbox } from '@/app/components/ui/checkbox'
+import { Label } from '@/app/components/ui/label'
+import { Switch } from '@/app/components/ui/switch'
 import { drawPose } from '@/app/lib/poseDrawing'
 import { calculatePoseSimilarity } from '@/app/lib/poseSim'
 
 import { PoseLogEntry } from './types'
-
-export interface PSPose {
-  keypoints: PSKeypoint[]
-}
-
-export interface PSKeypoint {
-  position: {
-    y: number
-    x: number
-  }
-  part: string
-  score: number
-}
 
 interface WebcamViewProps {
   targetImageRef: RefObject<HTMLImageElement>
@@ -56,6 +46,17 @@ export function WebcamView({
   const lastFpsUpdateTime = useRef<number>(0)
   const [targetPose, setTargetPose] = useState<poseDetection.Pose | null>(null)
   const lastLogTime = useRef<number>(0)
+  const [isDetecting, setIsDetecting] = useState(false)
+  const [selectedAngles, setSelectedAngles] = useState<string[]>([
+    'leftElbowAngle',
+    'leftShoulderAngle',
+    'leftHipAngle',
+    'leftKneeAngle',
+    'rightElbowAngle',
+    'rightShoulderAngle',
+    'rightHipAngle',
+    'rightKneeAngle',
+  ])
 
   useEffect(() => {
     lastFpsUpdateTime.current = performance.now()
@@ -121,18 +122,11 @@ export function WebcamView({
   const calculateSimilarity = useCallback(
     (pose: poseDetection.Pose) => {
       if (targetPose) {
-        const convertToPSPose = (p: poseDetection.Pose): PSPose => ({
-          keypoints: p.keypoints.map((kp) => ({
-            position: { x: kp.x, y: kp.y },
-            part: kp.name || '',
-            score: kp.score || 0,
-          })),
-        })
-
-        const psPose = convertToPSPose(pose)
-        const psTargetPose = convertToPSPose(targetPose)
-
-        const similarity = calculatePoseSimilarity(psPose, psTargetPose)
+        const similarity = calculatePoseSimilarity(
+          pose,
+          targetPose,
+          selectedAngles
+        )
 
         if (typeof similarity === 'number') {
           onSimilarityUpdate(similarity)
@@ -142,11 +136,11 @@ export function WebcamView({
         }
       }
     },
-    [targetPose, onSimilarityUpdate, logPoseIfNeeded]
+    [targetPose, onSimilarityUpdate, logPoseIfNeeded, selectedAngles]
   )
 
   useEffect(() => {
-    if (!detector || !webcamRef.current) return
+    if (!detector || !webcamRef.current || !isDetecting) return
 
     let animationFrameId: number
 
@@ -183,7 +177,7 @@ export function WebcamView({
         cancelAnimationFrame(animationFrameId)
       }
     }
-  }, [detector, drawPoseOnCanvas, updateFps, calculateSimilarity])
+  }, [detector, drawPoseOnCanvas, updateFps, calculateSimilarity, isDetecting])
 
   useEffect(() => {
     if (!detector || !targetImageRef.current) return
@@ -256,7 +250,46 @@ export function WebcamView({
   return (
     <Card className="flex flex-col">
       <CardHeader className="flex-shrink-0">
-        <CardTitle>Webcam View</CardTitle>
+        <div className="flex flex-col space-y-4">
+          <div className="flex items-center justify-between">
+            <CardTitle>Webcam View</CardTitle>
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="pose-detection"
+                checked={isDetecting}
+                onCheckedChange={setIsDetecting}
+              />
+              <Label htmlFor="pose-detection">Detection</Label>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-2 text-sm">
+            {[
+              { id: 'leftElbowAngle', label: 'Left Elbow' },
+              { id: 'leftShoulderAngle', label: 'Left Shoulder' },
+              { id: 'leftHipAngle', label: 'Left Hip' },
+              { id: 'leftKneeAngle', label: 'Left Knee' },
+              { id: 'rightElbowAngle', label: 'Right Elbow' },
+              { id: 'rightShoulderAngle', label: 'Right Shoulder' },
+              { id: 'rightHipAngle', label: 'Right Hip' },
+              { id: 'rightKneeAngle', label: 'Right Knee' },
+            ].map(({ id, label }) => (
+              <div key={id} className="flex items-center space-x-2">
+                <Checkbox
+                  id={id}
+                  checked={selectedAngles.includes(id)}
+                  onCheckedChange={(checked) => {
+                    setSelectedAngles((prev) =>
+                      checked
+                        ? [...prev, id]
+                        : prev.filter((angle) => angle !== id)
+                    )
+                  }}
+                />
+                <Label htmlFor={id}>{label}</Label>
+              </div>
+            ))}
+          </div>
+        </div>
       </CardHeader>
       <CardContent className="flex-grow flex flex-row p-2 overflow-hidden">
         <div className="flex-1 relative">

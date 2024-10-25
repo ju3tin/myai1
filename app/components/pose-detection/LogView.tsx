@@ -36,12 +36,12 @@ function LogEntry({ entry }: { entry: PoseLogEntry }) {
   return (
     <div className="flex items-start space-x-4 p-4 border rounded-lg">
       <Image
-            src={entry.screenshot}
-            alt="Pose screenshot"
-            width={400} // Specify a width
-            height={300} // Specify a height
-            className="object-cover rounded cursor-pointer"
-          />
+        src={entry.screenshot}
+        alt="Pose screenshot"
+        width={400} // Specify a width
+        height={0} // Specify a height
+        className="object-cover rounded cursor-pointer"
+      />
       <div className="flex-1">
         <div className="flex justify-between items-center mb-2">
           <span className="text-sm text-gray-500">
