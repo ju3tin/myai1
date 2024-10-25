@@ -6,7 +6,7 @@ function distance(
   a: poseDetection.Keypoint,
   b: poseDetection.Keypoint
 ): number {
-  return Math.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2)
+  return Math.sqrt((a.position.x - b.position.x) ** 2 + (a.position.y - b.position.y) ** 2)
 }
 
 function calculateAngle(
@@ -26,10 +26,7 @@ function calculateAngle(
 }
 
 function getAngles(pose: poseDetection.Pose): number[] {
-  const foundKeypoints = bodyKeypoints.map((name) =>
-    pose.keypoints.find((kp) => kp.name === name)
-  )
-
+  const foundKeypoints = bodyKeypoints.map((name) => pose.keypoints.find((kp) => kp.part === name))
   const [
     leftShoulder,
     leftElbow,
@@ -58,12 +55,12 @@ function getAngles(pose: poseDetection.Pose): number[] {
   return [
     leftElbowAngle,
     leftShoulderAngle,
-    leftHipAngle,
-    leftKneeAngle,
+    // leftHipAngle,
+    // leftKneeAngle,
     rightElbowAngle,
     rightShoulderAngle,
-    rightHipAngle,
-    rightKneeAngle,
+    // rightHipAngle,
+    // rightKneeAngle,
   ]
 }
 

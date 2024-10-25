@@ -19,7 +19,6 @@ import {
 } from '@/app/components/ui/card'
 
 import { LogView } from './LogView'
-import { Settings } from './Settings'
 import { TargetImage } from './TargetImage'
 import { PoseLogEntry } from './types'
 import { WebcamView } from './WebcamView'
@@ -39,8 +38,6 @@ export function PoseDetectionView() {
   const targetImageRef = useRef<HTMLImageElement>(null)
   const targetCanvasRef = useRef<HTMLCanvasElement>(null)
   const [similarityData, setSimilarityData] = useState<DataPoint[]>(initialData)
-  const [similarityMethod, setSimilarityMethod] = useState('weightedDistance')
-  const [coordinateSystem, setCoordinateSystem] = useState('default')
   const [logs, setLogs] = useState<PoseLogEntry[]>([])
 
   const handleSimilarityUpdate = useCallback((similarity: number) => {
@@ -57,14 +54,6 @@ export function PoseDetectionView() {
   return (
     <div className="flex flex-col">
       <div className="flex-1 flex flex-col p-4 space-y-4">
-        <div className="w-full">
-          <Settings
-            similarityMethod={similarityMethod}
-            setSimilarityMethod={setSimilarityMethod}
-            coordinateSystem={coordinateSystem}
-            setCoordinateSystem={setCoordinateSystem}
-          />
-        </div>
         <div className="w-full">
           <Card>
             <CardHeader>
@@ -114,7 +103,6 @@ export function PoseDetectionView() {
               targetImageRef={targetImageRef}
               targetCanvasRef={targetCanvasRef}
               onSimilarityUpdate={handleSimilarityUpdate}
-              similarityMethod={similarityMethod}
               onLogEntry={handleLogEntry}
             />
           </div>

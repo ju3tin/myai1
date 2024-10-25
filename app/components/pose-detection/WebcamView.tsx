@@ -4,7 +4,6 @@ import { useRef, useState, useEffect, useCallback, RefObject } from 'react'
 
 import * as tf from '@tensorflow/tfjs-core'
 import * as poseDetection from '@tensorflow-models/pose-detection'
-import { poseSimilarity } from 'posenet-similarity'
 import Webcam from 'react-webcam'
 
 import '@tensorflow/tfjs-backend-webgl'
@@ -15,7 +14,7 @@ import {
   CardTitle,
 } from '@/app/components/ui/card'
 import { drawPose } from '@/app/lib/poseDrawing'
-import { checkPose } from '@/app/lib/squatDetection'
+import { calculatePoseSimilarity } from '@/app/lib/poseSim'
 
 import { PoseLogEntry } from './types'
 
@@ -36,7 +35,6 @@ interface WebcamViewProps {
   targetImageRef: RefObject<HTMLImageElement>
   targetCanvasRef: RefObject<HTMLCanvasElement>
   onSimilarityUpdate: (similarity: number) => void
-  similarityMethod: string
   onLogEntry: (entry: PoseLogEntry) => void
 }
 
@@ -44,7 +42,6 @@ export function WebcamView({
   targetImageRef,
   targetCanvasRef,
   onSimilarityUpdate,
-  similarityMethod,
   onLogEntry,
 }: WebcamViewProps) {
   const webcamRef = useRef<Webcam>(null)
@@ -103,7 +100,7 @@ export function WebcamView({
   const logPoseIfNeeded = useCallback(
     async (pose: poseDetection.Pose, similarity: number) => {
       const now = Date.now()
-      if (similarity < 0.5 && now - lastLogTime.current >= 2000) {
+      if (similarity > 0.5 && now - lastLogTime.current >= 2000) {
         if (!webcamRef.current) return ''
         const screenshot = webcamRef.current.getScreenshot() || ''
         const logEntry: PoseLogEntry = {
@@ -123,10 +120,6 @@ export function WebcamView({
 
   const calculateSimilarity = useCallback(
     (pose: poseDetection.Pose) => {
-      if (!checkPose({ pose })) {
-        console.log('we need full body!')
-        return
-      }
       if (targetPose) {
         const convertToPSPose = (p: poseDetection.Pose): PSPose => ({
           keypoints: p.keypoints.map((kp) => ({
@@ -139,18 +132,7 @@ export function WebcamView({
         const psPose = convertToPSPose(pose)
         const psTargetPose = convertToPSPose(targetPose)
 
-        const strategyMap: Record<
-          string,
-          'cosineDistance' | 'weightedDistance' | 'cosineSimilarity'
-        > = {
-          cosineDistance: 'cosineDistance',
-          weightedDistance: 'weightedDistance',
-          cosineSimilarity: 'cosineSimilarity',
-        }
-
-        const strategy = strategyMap[similarityMethod] || 'cosineDistance'
-        // Use the selected similarity method
-        const similarity = poseSimilarity(psPose, psTargetPose, { strategy })
+        const similarity = calculatePoseSimilarity(psPose, psTargetPose)
 
         if (typeof similarity === 'number') {
           onSimilarityUpdate(similarity)
@@ -160,7 +142,7 @@ export function WebcamView({
         }
       }
     },
-    [targetPose, onSimilarityUpdate, similarityMethod, logPoseIfNeeded]
+    [targetPose, onSimilarityUpdate, logPoseIfNeeded]
   )
 
   useEffect(() => {
@@ -224,7 +206,6 @@ export function WebcamView({
             flipHorizontal: true,
           })
 
-          console.log(poses)
           if (poses.length > 0) {
             setTargetPose(poses[0])
           }
@@ -262,7 +243,6 @@ export function WebcamView({
         y: keypoint.y,
       })),
     }
-    console.log(scaledPose)
     // Draw the scaled and flipped pose
     drawPose(ctx, [scaledPose], ctx.canvas.width, ctx.canvas.height)
   }, [targetPose, targetCanvasRef, targetImageRef])

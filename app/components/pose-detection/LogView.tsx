@@ -10,11 +10,6 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/app/components/ui/collapsible'
-import {
-  Popover,
-  PopoverTrigger,
-  PopoverContent,
-} from '@/app/components/ui/popover'
 import { ScrollArea } from '@/app/components/ui/scroll-area'
 
 import { PoseLogEntry } from './types'
@@ -40,26 +35,13 @@ function LogEntry({ entry }: { entry: PoseLogEntry }) {
 
   return (
     <div className="flex items-start space-x-4 p-4 border rounded-lg">
-      <Popover>
-        <PopoverTrigger asChild>
-          <Image
+      <Image
             src={entry.screenshot}
             alt="Pose screenshot"
-            width={500}
-            height={500}
-            className="object-cover rounded cursor-pointer" // Added cursor pointer
+            width={400} // Specify a width
+            height={300} // Specify a height
+            className="object-cover rounded cursor-pointer"
           />
-        </PopoverTrigger>
-        <PopoverContent>
-          <Image
-            src={entry.screenshot}
-            alt="Enlarged Pose screenshot"
-            width={500} // Set appropriate enlarged width
-            height={500} // Set appropriate enlarged height
-            className="object-cover rounded"
-          />
-        </PopoverContent>
-      </Popover>
       <div className="flex-1">
         <div className="flex justify-between items-center mb-2">
           <span className="text-sm text-gray-500">
