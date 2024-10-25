@@ -156,7 +156,9 @@ export default function ExerciseView() {
           detector
         ) {
           try {
-            const newPoses = await detector.estimatePoses(video)
+            const newPoses = await detector.estimatePoses(video, {
+              flipHorizontal: true,
+            })
             setPoses(newPoses)
             drawPose(newPoses)
             updateFps() // Call updateFps after each successful pose detection

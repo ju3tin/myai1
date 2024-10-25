@@ -123,7 +123,9 @@ export default function SquatDetector() {
       if (webcamRef.current && webcamRef.current.video) {
         const video = webcamRef.current.video
         if (detector && video.readyState === 4) {
-          const poses = await detector.estimatePoses(video)
+          const poses = await detector.estimatePoses(video, {
+            flipHorizontal: true,
+          })
           if (poses.length > 0) {
             drawPose(poses[0])
             detectSquatCallback(poses[0])

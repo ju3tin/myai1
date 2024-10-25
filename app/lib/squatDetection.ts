@@ -43,7 +43,7 @@ export function countValidSquats(logs: SquatLog[]): number {
 
   return count
 }
-const keypoints = [
+export const bodyKeypoints = [
   'left_shoulder',
   'left_elbow',
   'left_wrist',
@@ -65,7 +65,7 @@ export function checkPose({
   pose: poseDetection.Pose
   confidence?: number
 }): boolean {
-  const foundKeypoints = keypoints.map((name) =>
+  const foundKeypoints = bodyKeypoints.map((name) =>
     pose.keypoints.find((kp) => kp.name === name)
   )
 
@@ -86,7 +86,7 @@ export function detectSquat({
   setFeedback: React.Dispatch<React.SetStateAction<Feedback>>
   onPhaseComplete: (phase: SquatPhase) => void
 }): void {
-  const foundKeypoints = keypoints.map((name) =>
+  const foundKeypoints = bodyKeypoints.map((name) =>
     pose.keypoints.find((kp) => kp.name === name)
   )
 
@@ -174,7 +174,7 @@ export function detectSquat({
   }
 }
 
-function calculateAngle(
+export function calculateAngle(
   a: poseDetection.Keypoint,
   b: poseDetection.Keypoint,
   c: poseDetection.Keypoint

@@ -178,7 +178,9 @@ export function WebcamView({
           detector
         ) {
           try {
-            const poses = await detector.estimatePoses(video)
+            const poses = await detector.estimatePoses(video, {
+              flipHorizontal: true,
+            })
             drawPoseOnCanvas(poses)
             updateFps()
             if (poses.length > 0) {
@@ -218,7 +220,9 @@ export function WebcamView({
           await new Promise(requestAnimationFrame)
 
           // 使用 canvas 进行姿势估计
-          const poses = await detector.estimatePoses(targetImageRef.current)
+          const poses = await detector.estimatePoses(targetImageRef.current, {
+            flipHorizontal: true,
+          })
 
           console.log(poses)
           if (poses.length > 0) {
