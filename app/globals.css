@@ -16,23 +16,23 @@ body {
   :root {
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
-    
+
     /* 使用中国红作为主色调 */
     --primary: 0 80% 50%;
     --primary-foreground: 210 40% 98%;
-    
+
     /* 使用青色作为次要色调 */
     --secondary: 180 60% 45%;
     --secondary-foreground: 222.2 47.4% 11.2%;
-    
+
     /* 中性色调 */
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
-    
+
     /* 强调色 */
-    --accent: 48 96% 53%;  /* 金色 */
+    --accent: 48 96% 53%; /* 金色 */
     --accent-foreground: 222.2 47.4% 11.2%;
-    
+
     /* 卡片和边框 */
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
