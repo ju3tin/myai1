@@ -16,9 +16,9 @@ export default function Header() {
           <Button variant="ghost" asChild>
             <Link href="/pose-detection">Pose Detection</Link>
           </Button>
-          <Button variant="ghost" asChild>
+          {/* <Button variant="ghost" asChild>
             <Link href="/facing-detection">Facing Detection</Link>
-          </Button>
+          </Button> */}
         </nav>
       </div>
     </header>
