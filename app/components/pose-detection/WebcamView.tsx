@@ -15,9 +15,13 @@ import {
 } from '@/app/components/ui/card'
 import { Checkbox } from '@/app/components/ui/checkbox'
 import { Label } from '@/app/components/ui/label'
+import { Slider } from '@/app/components/ui/slider'
 import { Switch } from '@/app/components/ui/switch'
 import { drawPose } from '@/app/lib/poseDrawing'
-import { calculateCombinedSimilarity, SimilarityStrategy } from '@/app/lib/simPose'
+import {
+  calculateCombinedSimilarity,
+  SimilarityStrategy,
+} from '@/app/lib/simPose'
 
 import { PoseLogEntry } from './types'
 
@@ -57,6 +61,11 @@ export function WebcamView({
     'rightHipAngle',
     'rightKneeAngle',
   ])
+  const [weights, setWeights] = useState({
+    [SimilarityStrategy.KEY_ANGLES]: 0,
+    [SimilarityStrategy.RELATIVE_ANGLES]: 0,
+    [SimilarityStrategy.INVARIANT_FEATURES]: 1,
+  })
 
   useEffect(() => {
     lastFpsUpdateTime.current = performance.now()
@@ -118,7 +127,18 @@ export function WebcamView({
     },
     [onLogEntry]
   )
-
+  const formatStrategyName = (strategy: string): string => {
+    switch (strategy) {
+      case SimilarityStrategy.KEY_ANGLES:
+        return 'Key Angles'
+      case SimilarityStrategy.RELATIVE_ANGLES:
+        return 'Relative Angles'
+      case SimilarityStrategy.INVARIANT_FEATURES:
+        return 'Invariant Features'
+      default:
+        return strategy
+    }
+  }
   const calculateSimilarity = useCallback(
     (pose: poseDetection.Pose) => {
       if (targetPose) {
@@ -126,16 +146,16 @@ export function WebcamView({
           strategies: [
             {
               strategy: SimilarityStrategy.KEY_ANGLES,
-              weight: 0,
+              weight: weights[SimilarityStrategy.KEY_ANGLES],
               selectedAngles: selectedAngles,
             },
             {
               strategy: SimilarityStrategy.RELATIVE_ANGLES,
-              weight: 0,
+              weight: weights[SimilarityStrategy.RELATIVE_ANGLES],
             },
             {
               strategy: SimilarityStrategy.INVARIANT_FEATURES,
-              weight: 1,
+              weight: weights[SimilarityStrategy.INVARIANT_FEATURES],
             },
           ],
           normalize: false,
@@ -149,7 +169,7 @@ export function WebcamView({
         }
       }
     },
-    [targetPose, onSimilarityUpdate, logPoseIfNeeded, selectedAngles]
+    [targetPose, onSimilarityUpdate, logPoseIfNeeded, selectedAngles, weights]
   )
 
   useEffect(() => {
@@ -275,33 +295,61 @@ export function WebcamView({
               <Label htmlFor="pose-detection">Detection</Label>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-2 text-sm">
-            {[
-              { id: 'leftElbowAngle', label: 'Left Elbow' },
-              { id: 'leftShoulderAngle', label: 'Left Shoulder' },
-              { id: 'leftHipAngle', label: 'Left Hip' },
-              { id: 'leftKneeAngle', label: 'Left Knee' },
-              { id: 'rightElbowAngle', label: 'Right Elbow' },
-              { id: 'rightShoulderAngle', label: 'Right Shoulder' },
-              { id: 'rightHipAngle', label: 'Right Hip' },
-              { id: 'rightKneeAngle', label: 'Right Knee' },
-            ].map(({ id, label }) => (
-              <div key={id} className="flex items-center space-x-2">
-                <Checkbox
-                  id={id}
-                  checked={selectedAngles.includes(id)}
-                  onCheckedChange={(checked) => {
-                    setSelectedAngles((prev) =>
-                      checked
-                        ? [...prev, id]
-                        : prev.filter((angle) => angle !== id)
-                    )
+
+          {/* 添加权重控制滑块 */}
+          <div className="space-y-4">
+            {Object.entries(weights).map(([strategy, weight]) => (
+              <div key={strategy} className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <Label>{formatStrategyName(strategy)}</Label>
+                  <span className="text-sm">{weight.toFixed(1)}</span>
+                </div>
+                <Slider
+                  min={0}
+                  max={1}
+                  step={0.1}
+                  value={[weight]}
+                  onValueChange={(value) => {
+                    setWeights((prev) => ({
+                      ...prev,
+                      [strategy]: value[0],
+                    }))
                   }}
                 />
-                <Label htmlFor={id}>{label}</Label>
               </div>
             ))}
           </div>
+
+          {/* 只在 KEY_ANGLES 权重大于 0 时显示关键点选择 */}
+          {weights[SimilarityStrategy.KEY_ANGLES] > 0 && (
+            <div className="grid grid-cols-2 gap-2 text-sm">
+              {[
+                { id: 'leftElbowAngle', label: 'Left Elbow' },
+                { id: 'leftShoulderAngle', label: 'Left Shoulder' },
+                { id: 'leftHipAngle', label: 'Left Hip' },
+                { id: 'leftKneeAngle', label: 'Left Knee' },
+                { id: 'rightElbowAngle', label: 'Right Elbow' },
+                { id: 'rightShoulderAngle', label: 'Right Shoulder' },
+                { id: 'rightHipAngle', label: 'Right Hip' },
+                { id: 'rightKneeAngle', label: 'Right Knee' },
+              ].map(({ id, label }) => (
+                <div key={id} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={id}
+                    checked={selectedAngles.includes(id)}
+                    onCheckedChange={(checked) => {
+                      setSelectedAngles((prev) =>
+                        checked
+                          ? [...prev, id]
+                          : prev.filter((angle) => angle !== id)
+                      )
+                    }}
+                  />
+                  <Label htmlFor={id}>{label}</Label>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </CardHeader>
       <CardContent className="flex-grow flex flex-row p-2 overflow-hidden">

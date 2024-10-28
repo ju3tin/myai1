@@ -21,6 +21,25 @@ const bodySegments: BodySegment[] = [
   { name: 'rightLowerLeg', start: 'right_knee', end: 'right_ankle' },
   { name: 'torso', start: 'left_shoulder', end: 'left_hip' },
 ]
+
+interface Distribution {
+  width: number
+  height: number
+  aspect: number
+}
+
+interface SpatialPattern {
+  symmetry: number
+  distribution: Distribution
+}
+
+// 定义拓扑类型
+interface Topology {
+  jointRelations: Map<string, string>
+  intersections: Map<string, boolean>
+  spatialPattern: SpatialPattern
+}
+
 export function calculateInvariantFeaturesSimilarity(
   pose1: poseDetection.Pose,
   pose2: poseDetection.Pose
@@ -107,7 +126,10 @@ function calculateAnglesSimilarity(
 }
 
 // 计算拓扑特征相似度
-function calculateTopologySimilarity(topology1: any, topology2: any): number {
+function calculateTopologySimilarity(
+  topology1: Topology,
+  topology2: Topology
+): number {
   // 1. 计算关节关系相似度
   const jointRelationsSimilarity = calculateJointRelationsSimilarity(
     topology1.jointRelations,
@@ -335,7 +357,7 @@ function doLinesIntersect(
 }
 
 // 分析空间排列模式
-function analyzeSpatialPattern(pose: poseDetection.Pose) {
+function analyzeSpatialPattern(pose: poseDetection.Pose): SpatialPattern {
   const pattern = {
     symmetry: calculateSymmetry(pose),
     distribution: analyzeKeypointDistribution(pose),
@@ -373,11 +395,11 @@ function calculateSymmetry(pose: poseDetection.Pose): number {
 }
 
 // 分析关键点分布
-function analyzeKeypointDistribution(pose: poseDetection.Pose) {
+function analyzeKeypointDistribution(pose: poseDetection.Pose): Distribution {
   // 计算关键点的空间分布特征
   const points = pose.keypoints.filter((kp) => kp.score && kp.score > 0.3)
 
-  if (points.length === 0) return {}
+  if (points.length === 0) return { width: 0, height: 0, aspect: 0 }
 
   // 计算边界框
   const minX = Math.min(...points.map((p) => p.x))
@@ -393,7 +415,7 @@ function analyzeKeypointDistribution(pose: poseDetection.Pose) {
 }
 
 // 计算拓扑特征
-function calculateTopologicalFeatures(pose: poseDetection.Pose) {
+function calculateTopologicalFeatures(pose: poseDetection.Pose): Topology {
   return {
     jointRelations: getJointRelations(pose),
     intersections: checkLimbIntersections(pose),
