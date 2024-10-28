@@ -17,7 +17,7 @@ import { Checkbox } from '@/app/components/ui/checkbox'
 import { Label } from '@/app/components/ui/label'
 import { Switch } from '@/app/components/ui/switch'
 import { drawPose } from '@/app/lib/poseDrawing'
-import { calculatePoseSimilarity } from '@/app/lib/poseSim'
+import { calculatePoseSimilarity, SimilarityStrategy } from '@/app/lib/simPose'
 
 import { PoseLogEntry } from './types'
 
@@ -125,8 +125,11 @@ export function WebcamView({
         const similarity = calculatePoseSimilarity(
           pose,
           targetPose,
-          selectedAngles,
-          true
+          {
+            strategy: SimilarityStrategy.KEY_ANGLES,
+            selectedAngles: selectedAngles,
+            normalize: true,
+          }
         )
 
         if (typeof similarity === 'number') {
