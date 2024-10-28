@@ -32,7 +32,7 @@ export function calculateInvariantFeaturesSimilarity(
   const weights = {
     lengthRatios: 0.3,
     relativeAngles: 0.4,
-    topology: 0.3
+    topology: 0.3,
   }
 
   // 1. 计算长度比相似度
@@ -107,10 +107,7 @@ function calculateAnglesSimilarity(
 }
 
 // 计算拓扑特征相似度
-function calculateTopologySimilarity(
-  topology1: any,
-  topology2: any
-): number {
+function calculateTopologySimilarity(topology1: any, topology2: any): number {
   // 1. 计算关节关系相似度
   const jointRelationsSimilarity = calculateJointRelationsSimilarity(
     topology1.jointRelations,
@@ -180,20 +177,20 @@ function calculateIntersectionsSimilarity(
 // 计算空间模式相似度
 function calculateSpatialPatternSimilarity(
   pattern1: {
-    symmetry: number;
+    symmetry: number
     distribution: {
-      width: number;
-      height: number;
-      aspect: number;
-    };
+      width: number
+      height: number
+      aspect: number
+    }
   },
   pattern2: {
-    symmetry: number;
+    symmetry: number
     distribution: {
-      width: number;
-      height: number;
-      aspect: number;
-    };
+      width: number
+      height: number
+      aspect: number
+    }
   }
 ): number {
   // 对称性相似度
