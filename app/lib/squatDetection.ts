@@ -1,5 +1,7 @@
 import * as poseDetection from '@tensorflow-models/pose-detection'
 
+import { bodyKeypoints } from './types'
+
 export interface Feedback {
   isCorrect: boolean
   message: string
@@ -43,20 +45,6 @@ export function countValidSquats(logs: SquatLog[]): number {
 
   return count
 }
-export const bodyKeypoints = [
-  'left_shoulder',
-  'left_elbow',
-  'left_wrist',
-  'left_hip',
-  'left_knee',
-  'left_ankle',
-  'right_shoulder',
-  'right_elbow',
-  'right_wrist',
-  'right_hip',
-  'right_knee',
-  'right_ankle',
-]
 
 export function checkPose({
   pose,

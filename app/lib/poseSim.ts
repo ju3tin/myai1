@@ -1,7 +1,6 @@
 import * as poseDetection from '@tensorflow-models/pose-detection'
 
-import { bodyKeypoints } from './squatDetection'
-
+import { bodyKeypoints } from './types'
 function distance(
   a: poseDetection.Keypoint,
   b: poseDetection.Keypoint
