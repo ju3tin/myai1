@@ -125,7 +125,8 @@ export function WebcamView({
         const similarity = calculatePoseSimilarity(
           pose,
           targetPose,
-          selectedAngles
+          selectedAngles,
+          true
         )
 
         if (typeof similarity === 'number') {

@@ -1,6 +1,7 @@
 import * as poseDetection from '@tensorflow-models/pose-detection'
 
 import { bodyKeypoints } from './types'
+import { normalizePose } from './normPose'
 function distance(
   a: poseDetection.Keypoint,
   b: poseDetection.Keypoint
@@ -111,8 +112,13 @@ function getAngles(
 export function calculatePoseSimilarity(
   origin: poseDetection.Pose,
   target: poseDetection.Pose,
-  selectedAngles: string[] = []
+  selectedAngles: string[] = [],
+  normalize: boolean = false
 ): number {
+  if (normalize) {
+    origin = normalizePose(origin)
+    target = normalizePose(target)
+  }
   const originAngles = getAngles(origin, selectedAngles)
   const targetAngles = getAngles(target, selectedAngles)
 
