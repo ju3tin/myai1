@@ -17,6 +17,7 @@ import { Checkbox } from '@/app/components/ui/checkbox'
 import { Label } from '@/app/components/ui/label'
 import { Slider } from '@/app/components/ui/slider'
 import { Switch } from '@/app/components/ui/switch'
+import { useToast } from '@/app/hooks/use-toast'
 import { drawPose } from '@/app/lib/poseDrawing'
 import {
   calculateCombinedSimilarity,
@@ -38,6 +39,8 @@ export function WebcamView({
   onSimilarityUpdate,
   onLogEntry,
 }: WebcamViewProps) {
+  const { toast } = useToast()
+
   const webcamRef = useRef<Webcam>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -66,6 +69,30 @@ export function WebcamView({
     [SimilarityStrategy.RELATIVE_ANGLES]: 0,
     [SimilarityStrategy.INVARIANT_FEATURES]: 1,
   })
+
+  const resetWeights = () => {
+    setWeights({
+      [SimilarityStrategy.KEY_ANGLES]: 0,
+      [SimilarityStrategy.RELATIVE_ANGLES]: 0,
+      [SimilarityStrategy.INVARIANT_FEATURES]: 1,
+    })
+  }
+
+  useEffect(() => {
+    const totalWeight = Object.values(weights).reduce(
+      (sum, weight) => sum + weight,
+      0
+    )
+    if (totalWeight > 1) {
+      toast({
+        title: 'Invalid Weights',
+        description:
+          'The sum of all weights cannot exceed 1. Weights have been reset.',
+        variant: 'destructive',
+      })
+      resetWeights()
+    }
+  }, [weights, toast])
 
   useEffect(() => {
     lastFpsUpdateTime.current = performance.now()
