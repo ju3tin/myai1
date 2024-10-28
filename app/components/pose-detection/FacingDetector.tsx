@@ -133,11 +133,13 @@ export default function FacingDetector() {
   }, [])
 
   useEffect(() => {
-    if (!detector || !webcamRef.current) return
+    
+    if (!webcamRef.current) return
 
     let animationFrameId: number
 
     async function detectPose() {
+      if (!detector) return // Ensure detector is not null
       if (webcamRef.current?.video?.readyState === 4) {
         const poses = await detector.estimatePoses(webcamRef.current.video, {
           flipHorizontal: true,
