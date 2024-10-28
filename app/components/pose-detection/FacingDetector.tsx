@@ -133,7 +133,6 @@ export default function FacingDetector() {
   }, [])
 
   useEffect(() => {
-    
     if (!webcamRef.current) return
 
     let animationFrameId: number
