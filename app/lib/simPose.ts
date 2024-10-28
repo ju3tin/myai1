@@ -1,13 +1,14 @@
 import * as poseDetection from '@tensorflow-models/pose-detection'
-import { calculatePoseSimilarity as calculateKeyAngleSimilarity } from './poseSim'
-import { calculateRelativeAngleSimilarity } from './relativeAngle'
+
 import { calculateInvariantFeaturesSimilarity } from './invariantFeature'
 import { normalizePose } from './normPose'
+import { calculatePoseSimilarity as calculateKeyAngleSimilarity } from './poseSim'
+import { calculateRelativeAngleSimilarity } from './relativeAngle'
 
 export enum SimilarityStrategy {
   KEY_ANGLES = 'keyAngles',
   RELATIVE_ANGLES = 'relativeAngles',
-  INVARIANT_FEATURES = 'invariantFeatures'
+  INVARIANT_FEATURES = 'invariantFeatures',
 }
 
 interface SimilarityOptions {
@@ -21,8 +22,8 @@ export function calculatePoseSimilarity(
   pose2: poseDetection.Pose,
   options: SimilarityOptions
 ): number {
-  let normalizedPose1 = options.normalize ? normalizePose(pose1) : pose1
-  let normalizedPose2 = options.normalize ? normalizePose(pose2) : pose2
+  const normalizedPose1 = options.normalize ? normalizePose(pose1) : pose1
+  const normalizedPose2 = options.normalize ? normalizePose(pose2) : pose2
 
   switch (options.strategy) {
     case SimilarityStrategy.KEY_ANGLES:
@@ -37,7 +38,10 @@ export function calculatePoseSimilarity(
       return calculateRelativeAngleSimilarity(normalizedPose1, normalizedPose2)
 
     case SimilarityStrategy.INVARIANT_FEATURES:
-      return calculateInvariantFeaturesSimilarity(normalizedPose1, normalizedPose2)
+      return calculateInvariantFeaturesSimilarity(
+        normalizedPose1,
+        normalizedPose2
+      )
 
     default:
       throw new Error(`Unknown similarity strategy: ${options.strategy}`)
@@ -64,7 +68,7 @@ export function calculateCombinedSimilarity(
     const similarity = calculatePoseSimilarity(pose1, pose2, {
       strategy,
       selectedAngles,
-      normalize: options.normalize
+      normalize: options.normalize,
     })
     weightedSimilarity += similarity * weight
     totalWeight += weight
