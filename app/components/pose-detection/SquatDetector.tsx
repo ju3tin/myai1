@@ -135,12 +135,20 @@ export default function SquatDetector() {
   const detectSquatCallback = useCallback(
     (pose: poseDetection.Pose) => {
       if (!poseKeypoints) return // Ensure poseKeypoints is not null
+      //flip horizontal of poseKeypoints
+      const flippedPoseKeypoints = {
+        ...poseKeypoints,
+        keypoints: poseKeypoints.keypoints.map((keypoint) => ({
+          ...keypoint,
+          x: standardImageRef.current!.width - keypoint.x,
+        })),
+      }
       detectSquatWithRef({
         pose,
         squatPhase,
         setFeedback,
         onPhaseComplete: addSquatLog,
-        referenceSquatPose: poseKeypoints,
+        referenceSquatPose: flippedPoseKeypoints,
       })
     },
     [setFeedback, addSquatLog]
@@ -229,7 +237,11 @@ export default function SquatDetector() {
       </div>
 
       {selectedPose && (
-        <Tabs defaultValue="standardPose" className="w-full" onValueChange={(value) => setActiveTab(value)}>
+        <Tabs
+          defaultValue="standardPose"
+          className="w-full"
+          onValueChange={(value) => setActiveTab(value)}
+        >
           <TabsList>
             <TabsTrigger value="standardPose">标准姿势</TabsTrigger>
             <TabsTrigger value="webcam">摄像头</TabsTrigger>

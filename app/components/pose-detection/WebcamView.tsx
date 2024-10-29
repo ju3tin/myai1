@@ -169,24 +169,36 @@ export function WebcamView({
   const calculateSimilarity = useCallback(
     (pose: poseDetection.Pose) => {
       if (targetPose) {
-        const similarity = calculateCombinedSimilarity(pose, targetPose, {
-          strategies: [
-            {
-              strategy: SimilarityStrategy.KEY_ANGLES,
-              weight: weights[SimilarityStrategy.KEY_ANGLES],
-              selectedAngles: selectedAngles,
-            },
-            {
-              strategy: SimilarityStrategy.RELATIVE_ANGLES,
-              weight: weights[SimilarityStrategy.RELATIVE_ANGLES],
-            },
-            {
-              strategy: SimilarityStrategy.INVARIANT_FEATURES,
-              weight: weights[SimilarityStrategy.INVARIANT_FEATURES],
-            },
-          ],
-          normalize: false,
-        })
+        // flip horizontal of targetPose
+        const flippedTargetPose = {
+          ...targetPose,
+          keypoints: targetPose.keypoints.map((keypoint) => ({
+            ...keypoint,
+            x: targetImageRef.current!.width - keypoint.x,
+          })),
+        }
+        const similarity = calculateCombinedSimilarity(
+          pose,
+          flippedTargetPose,
+          {
+            strategies: [
+              {
+                strategy: SimilarityStrategy.KEY_ANGLES,
+                weight: weights[SimilarityStrategy.KEY_ANGLES],
+                selectedAngles: selectedAngles,
+              },
+              {
+                strategy: SimilarityStrategy.RELATIVE_ANGLES,
+                weight: weights[SimilarityStrategy.RELATIVE_ANGLES],
+              },
+              {
+                strategy: SimilarityStrategy.INVARIANT_FEATURES,
+                weight: weights[SimilarityStrategy.INVARIANT_FEATURES],
+              },
+            ],
+            normalize: false,
+          }
+        )
 
         if (typeof similarity === 'number') {
           onSimilarityUpdate(similarity)
