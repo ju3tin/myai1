@@ -25,7 +25,7 @@ export function estimateOrientation(pose: poseDetection.Pose): {
 
   // Ensure both shoulders are defined before calculating the shoulder vector
   if (!rightShoulder || !leftShoulder) {
-    return undefined
+    return { angle: 0, direction: Direction.Unknown, isValid: false }
   }
 
   const calculateAngle = () => {
