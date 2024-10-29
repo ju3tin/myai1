@@ -136,7 +136,7 @@ export default function SquatDetector() {
     (pose: poseDetection.Pose) => {
       if (!poseKeypoints) return // Ensure poseKeypoints is not null
       //flip horizontal of poseKeypoints
-      
+
       detectSquatWithRef({
         pose,
         squatPhase,
