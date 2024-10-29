@@ -118,7 +118,6 @@ export function estimateOrientation(pose: poseDetection.Pose): {
     leftEye.score > minConfidence && rightEye.score > minConfidence
 
   // 使用空间特征判断朝向
-  let angle: number
   let direction: Direction
 
   // 前面的特征:
