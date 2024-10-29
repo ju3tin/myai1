@@ -8,6 +8,7 @@ import Webcam from 'react-webcam'
 
 import '@tensorflow/tfjs-backend-webgl'
 import { drawPose } from '@/app/lib/poseDrawing'
+import { estimateOrientation } from '@/app/lib/orient'
 
 interface FacingFeedback {
   angle: number
@@ -47,69 +48,18 @@ export default function FacingDetector() {
     initDetector()
   }, [])
 
-  const calculateFacingAngle = useCallback((pose: poseDetection.Pose) => {
-    const leftShoulder = pose.keypoints.find(
-      (kp) => kp.name === 'left_shoulder'
-    )
-    const rightShoulder = pose.keypoints.find(
-      (kp) => kp.name === 'right_shoulder'
-    )
-
-    if (
-      !leftShoulder ||
-      !rightShoulder ||
-      !leftShoulder.x ||
-      !rightShoulder.x
-    ) {
-      return { angle: 0, isValid: false }
-    }
-
-    // 计算肩膀距离比例来估算旋转角度
-    const shoulderDistance = Math.abs(leftShoulder.x - rightShoulder.x)
-    const normalizedDistance =
-      shoulderDistance / (webcamRef.current?.video?.videoWidth || 640)
-
-    // 将距离转换为角度（0度表示正面）
-    const angle = (1 - normalizedDistance * 2) * 90
-
-    return { angle, isValid: true }
-  }, [])
-
   const updateFacingFeedback = useCallback(
     (pose: poseDetection.Pose) => {
-      const { angle, isValid } = calculateFacingAngle(pose)
+      const { angle, direction, isValid } = estimateOrientation(pose)
 
-      if (!isValid) {
-        setFeedback({
-          angle: 0,
-          message: '无法检测到肩膀位置',
-          isCorrect: false,
-        })
-        return
-      }
-
-      const absAngle = Math.abs(angle)
-      let message = ''
-      let isCorrect = false
-
-      if (absAngle < 15) {
-        message = '完美！保持正面姿势'
-        isCorrect = true
-      } else if (angle > 0) {
-        message = '请向右转'
-        isCorrect = false
-      } else {
-        message = '请向左转'
-        isCorrect = false
-      }
-
+      
       setFeedback({
         angle,
-        message,
-        isCorrect,
+        message: direction,
+        isCorrect: isValid,
       })
     },
-    [calculateFacingAngle]
+    []
   )
 
   const drawPoseCallback = useCallback((pose: poseDetection.Pose) => {
