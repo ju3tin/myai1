@@ -8,14 +8,27 @@ import Image from 'next/image'
 import Webcam from 'react-webcam'
 
 import '@tensorflow/tfjs-backend-webgl'
+import { Button } from '@/app/components/ui/button'
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '@/app/components/ui/tabs'
 import { drawPose as dp } from '@/app/lib/poseDrawing'
 import {
   countValidSquats,
-  detectSquat,
+  detectSquatWithRef,
   SquatPhase,
   SquatLog,
   Feedback,
 } from '@/app/lib/squatDetection'
+
+const STANDARD_POSES = [
+  { id: 1, src: '/poses/squat-1.jpg', label: '深蹲姿势 1' },
+  { id: 2, src: '/poses/squat-2.jpg', label: '深蹲姿势 2' },
+  { id: 3, src: '/poses/squat-3.jpg', label: '深蹲姿势 3' },
+]
 
 export default function SquatDetector() {
   const webcamRef = useRef<Webcam>(null)
@@ -34,6 +47,15 @@ export default function SquatDetector() {
 
   const frameCount = useRef<number>(0)
   const lastFpsUpdateTime = useRef<number>(performance.now())
+
+  const [selectedPose, setSelectedPose] = useState<number | null>(
+    STANDARD_POSES[0].id
+  )
+  const [poseKeypoints, setPoseKeypoints] = useState<poseDetection.Pose | null>(
+    null
+  )
+  const standardImageRef = useRef<HTMLImageElement>(null)
+  const standardCanvasRef = useRef<HTMLCanvasElement>(null)
 
   const captureScreenshot = useCallback(() => {
     if (!webcamRef.current) return ''
@@ -87,7 +109,15 @@ export default function SquatDetector() {
     const video = webcamRef.current?.video
     if (!ctx || !video) return
 
-    dp(ctx, [pose], video.videoWidth, video.videoHeight)
+    // 设置 canvas 尺寸以匹配视频尺寸
+    ctx.canvas.width = video.videoWidth
+    ctx.canvas.height = video.videoHeight
+
+    // 清除之前的绘制内容
+    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
+
+    // 绘制姿势
+    dp(ctx, [pose], video.videoWidth, video.videoHeight, false)
   }, [])
 
   const updateFps = useCallback(() => {
@@ -104,11 +134,13 @@ export default function SquatDetector() {
 
   const detectSquatCallback = useCallback(
     (pose: poseDetection.Pose) => {
-      detectSquat({
+      if (!poseKeypoints) return // Ensure poseKeypoints is not null
+      detectSquatWithRef({
         pose,
         squatPhase,
         setFeedback,
         onPhaseComplete: addSquatLog,
+        referenceSquatPose: poseKeypoints,
       })
     },
     [setFeedback, addSquatLog]
@@ -145,33 +177,117 @@ export default function SquatDetector() {
     }
   }, [detector, drawPose, updateFps, detectSquatCallback])
 
+  const detectImagePose = useCallback(async () => {
+    if (!detector || !standardImageRef.current) return
+
+    const poses = await detector.estimatePoses(standardImageRef.current, {
+      flipHorizontal: true,
+    })
+
+    if (poses.length > 0) {
+      setPoseKeypoints(poses[0])
+      const ctx = standardCanvasRef.current?.getContext('2d')
+      if (ctx && standardImageRef.current) {
+        // 设置 canvas 尺寸以匹配图片尺寸
+        ctx.canvas.width = standardImageRef.current.width
+        ctx.canvas.height = standardImageRef.current.height
+
+        // 清除之前的绘制内容
+        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
+        // flip horizontal
+        const flippedPose = {
+          ...poses[0],
+          keypoints: poses[0].keypoints.map((keypoint) => ({
+            ...keypoint,
+            x: ctx.canvas.width - keypoint.x,
+            y: keypoint.y,
+          })),
+        }
+        // 绘制姿势
+        dp(ctx, [flippedPose], ctx.canvas.width, ctx.canvas.height, false)
+      }
+    }
+  }, [detector])
+
+  const handlePoseSelect = useCallback(
+    (poseId: number) => {
+      setSelectedPose(poseId === selectedPose ? null : poseId)
+    },
+    [selectedPose]
+  )
+
   return (
     <div className="flex flex-col gap-4">
-      <div className="relative">
-        <div
-          className={`absolute inset-0 border-4 ${feedback.isCorrect ? 'border-green-500' : 'border-red-500'} z-10`}
-        ></div>
-        <Webcam ref={webcamRef} className="w-full" mirrored />
-        <canvas
-          ref={canvasRef}
-          className="absolute top-0 left-0 w-full h-full"
-        />
-        <div className="absolute top-2 left-2 bg-black bg-opacity-50 text-white p-2 rounded">
-          FPS: {fps}
-        </div>
-        <div className="absolute top-2 right-2 bg-black bg-opacity-50 text-white p-2 rounded">
-          Squats: {squatCount}
-        </div>
-        <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-50 text-white p-2 rounded">
-          {feedback.message}
-        </div>
+      <div className="flex gap-2 p-2">
+        {STANDARD_POSES.map((pose) => (
+          <Button
+            key={pose.id}
+            variant={selectedPose === pose.id ? 'default' : 'outline'}
+            onClick={() => handlePoseSelect(pose.id)}
+            className="flex-shrink-0"
+          >
+            <span className="ml-2">{pose.label}</span>
+          </Button>
+        ))}
       </div>
 
-      {/* Update Squat Log Display to show validity */}
+      {selectedPose && (
+        <Tabs defaultValue="standardPose" className="w-full">
+          <TabsList>
+            <TabsTrigger value="standardPose">标准姿势</TabsTrigger>
+            <TabsTrigger value="webcam">摄像头</TabsTrigger>
+          </TabsList>
+          <TabsContent value="standardPose">
+            <div className="flex flex-col items-center">
+              <div className="bg-white p-4 rounded-lg max-w-3xl w-full">
+                <div className="relative">
+                  <Image
+                    ref={standardImageRef}
+                    src={
+                      STANDARD_POSES.find((p) => p.id === selectedPose)?.src ||
+                      ''
+                    }
+                    alt="Standard Pose"
+                    width={1024}
+                    height={768}
+                    className="w-full h-auto"
+                    onLoad={detectImagePose}
+                  />
+                  <canvas
+                    ref={standardCanvasRef}
+                    className="absolute top-0 left-0 w-full h-full"
+                  />
+                </div>
+              </div>
+            </div>
+          </TabsContent>
+          <TabsContent value="webcam">
+            <div className="relative">
+              <div
+                className={`absolute inset-0 border-4 ${feedback.isCorrect ? 'border-green-500' : 'border-red-500'} z-10`}
+              ></div>
+              <Webcam ref={webcamRef} className="w-full" mirrored />
+              <canvas
+                ref={canvasRef}
+                className="absolute top-0 left-0 w-full h-full"
+              />
+              <div className="absolute top-2 left-2 bg-black bg-opacity-50 text-white p-2 rounded">
+                FPS: {fps}
+              </div>
+              <div className="absolute top-2 right-2 bg-black bg-opacity-50 text-white p-2 rounded">
+                Squats: {squatCount}
+              </div>
+              <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-50 text-white p-2 rounded">
+                {feedback.message}
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
+      )}
+
       <div className="bg-gray-100 p-4 rounded-lg">
         <h2 className="text-lg font-semibold mb-4">深蹲记录</h2>
         <div className="flex flex-col gap-4">
-          {/* First row - 3 images */}
           <div className="grid grid-cols-3 gap-4">
             {squatLogs.slice(0, 3).map((log) => (
               <div
@@ -195,7 +311,6 @@ export default function SquatDetector() {
             ))}
           </div>
 
-          {/* Subsequent rows - 2 images each */}
           {Array.from({ length: Math.ceil((squatLogs.length - 3) / 2) }).map(
             (_, rowIndex) => (
               <div key={rowIndex} className="grid grid-cols-2 gap-4">

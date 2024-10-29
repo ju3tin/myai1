@@ -1,7 +1,11 @@
 import * as poseDetection from '@tensorflow-models/pose-detection'
 
-import { bodyKeypoints } from './types'
+import {
+  calculateCombinedSimilarity,
+  SimilarityStrategy,
+} from '@/app/lib/simPose'
 
+import { bodyKeypoints } from './types'
 export interface Feedback {
   isCorrect: boolean
   message: string
@@ -210,4 +214,134 @@ function checkSquatForm(
   }
 
   return { isCorrect: true, message: 'Good squat form!' }
+}
+
+export function detectSquatWithRef({
+  pose,
+  squatPhase,
+  setFeedback,
+  onPhaseComplete,
+  referenceSquatPose, // 新增：标准深蹲姿势参考
+}: {
+  pose: poseDetection.Pose
+  squatPhase: React.MutableRefObject<SquatPhase>
+  setFeedback: React.Dispatch<React.SetStateAction<Feedback>>
+  onPhaseComplete: (phase: SquatPhase) => void
+  referenceSquatPose: poseDetection.Pose
+}): void {
+  const foundKeypoints = bodyKeypoints.map((name) =>
+    pose.keypoints.find((kp) => kp.name === name)
+  )
+
+  // 检查关键点可见性
+  if (
+    foundKeypoints.some((kp) => !kp || (kp.score ?? 0) < CONFIDENCE_THRESHOLD)
+  ) {
+    setFeedback({ isCorrect: false, message: '请确保您的全身在摄像头视野内' })
+    return
+  }
+
+  const [
+    leftShoulder,
+    leftElbow,
+    leftWrist,
+    leftHip,
+    leftKnee,
+    leftAnkle,
+    rightShoulder,
+    rightElbow,
+    rightWrist,
+    rightHip,
+    rightKnee,
+    rightAnkle,
+  ] = foundKeypoints as poseDetection.Keypoint[]
+
+  // 计算站立姿势的关键角度
+  const leftHipAngle = calculateAngle(leftShoulder, leftHip, leftKnee)
+  const rightHipAngle = calculateAngle(rightShoulder, rightHip, rightKnee)
+  const leftKneeAngle = calculateAngle(leftHip, leftKnee, leftAnkle)
+  const rightKneeAngle = calculateAngle(rightHip, rightKnee, rightAnkle)
+  const leftElbowAngle = calculateAngle(leftShoulder, leftElbow, leftWrist)
+  const rightElbowAngle = calculateAngle(rightShoulder, rightElbow, rightWrist)
+  const leftShoulderAngle = calculateAngle(leftElbow, leftShoulder, leftHip)
+  const rightShoulderAngle = calculateAngle(rightElbow, rightShoulder, rightHip)
+
+  // 判断是否处于站立姿势
+  const isStanding =
+    leftHipAngle > 160 &&
+    rightHipAngle > 160 &&
+    leftKneeAngle > 160 &&
+    rightKneeAngle > 160 &&
+    leftElbowAngle > 160 &&
+    rightElbowAngle > 160 &&
+    leftShoulderAngle < 20 &&
+    rightShoulderAngle < 20
+
+  // 使用相似度计算判断深蹲姿势
+  const squatSimilarity = calculateCombinedSimilarity(
+    pose,
+    referenceSquatPose,
+    {
+      strategies: [
+        {
+          strategy: SimilarityStrategy.KEY_ANGLES,
+          weight: 0,
+          selectedAngles: [
+            'leftElbowAngle',
+            'leftShoulderAngle',
+            'leftHipAngle',
+            'leftKneeAngle',
+            'rightElbowAngle',
+            'rightShoulderAngle',
+            'rightHipAngle',
+            'rightKneeAngle',
+          ], // 根据需要选择关键角度
+        },
+        {
+          strategy: SimilarityStrategy.RELATIVE_ANGLES,
+          weight: 1,
+        },
+        {
+          strategy: SimilarityStrategy.INVARIANT_FEATURES,
+          weight: 0,
+        },
+      ],
+      normalize: true,
+    }
+  )
+
+  const SQUAT_SIMILARITY_THRESHOLD = 0.75 // 可以根据需要调整阈值
+  const isSquatting = squatSimilarity >= SQUAT_SIMILARITY_THRESHOLD
+
+  switch (squatPhase.current) {
+    case SquatPhase.STANDING:
+      if (isStanding) {
+        onPhaseComplete(SquatPhase.STANDING)
+        squatPhase.current = SquatPhase.SQUATTING
+      }
+      break
+    case SquatPhase.SQUATTING:
+      if (isSquatting) {
+        onPhaseComplete(SquatPhase.SQUATTING)
+        squatPhase.current = SquatPhase.STANDING
+        setFeedback({ isCorrect: true, message: '下蹲姿势正确！' })
+      }
+      break
+  }
+
+  // 提供反馈
+  if (!isStanding && !isSquatting) {
+    // 根据相似度给出更详细的反馈
+    if (squatSimilarity < 0.5) {
+      setFeedback({
+        isCorrect: false,
+        message: '姿势差异较大，请参考示范动作',
+      })
+    } else if (squatSimilarity < SQUAT_SIMILARITY_THRESHOLD) {
+      setFeedback({
+        isCorrect: false,
+        message: '姿势接近正确，请继续调整',
+      })
+    }
+  }
 }

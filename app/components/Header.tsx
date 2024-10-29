@@ -11,7 +11,7 @@ export default function Header() {
         </Link>
         <nav>
           <Button variant="ghost" asChild>
-            <Link href="/pose-tracking">Pose Tracking</Link>
+            <Link href="/pose-tracking">Squat Detection</Link>
           </Button>
           <Button variant="ghost" asChild>
             <Link href="/pose-detection">Pose Detection</Link>
