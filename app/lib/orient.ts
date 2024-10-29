@@ -25,7 +25,7 @@ export function estimateOrientation(pose: poseDetection.Pose): {
 
   // Ensure both shoulders are defined before calculating the shoulder vector
   if (!rightShoulder || !leftShoulder) {
-    return { angle: 0, direction: Direction.Unknown, isValid: false }
+    return undefined
   }
 
   const calculateAngle = () => {
@@ -37,7 +37,7 @@ export function estimateOrientation(pose: poseDetection.Pose): {
 
     // Ensure the nose keypoint is defined before calculating the nose vector
     if (!nose) {
-      return { angle: 0, direction: Direction.Unknown, isValid: false }
+      return undefined
     }
 
     // 2. 计算肩膀中点到鼻子的向量
@@ -48,7 +48,7 @@ export function estimateOrientation(pose: poseDetection.Pose): {
 
     // Ensure both ears are defined before calculating the ear difference
     if (!leftEar || !rightEar) {
-      return { angle: 0, direction: Direction.Unknown, isValid: false }
+      return undefined
     }
 
     // 3. 计算耳朵的水平距离差
@@ -140,8 +140,11 @@ export function estimateOrientation(pose: poseDetection.Pose): {
     direction = Direction.Back
   }
 
+  // Ensure calculateAngle returns a number
+  const angle = calculateAngle() // Store the angle in a variable
+
   return {
-    angle: calculateAngle(),
+    angle: angle ?? 160, // Provide a default value of 0 if angle is undefined
     direction,
     isValid:
       direction === Direction.Front &&
