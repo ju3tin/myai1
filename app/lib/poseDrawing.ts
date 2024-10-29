@@ -4,7 +4,8 @@ export function drawPose(
   ctx: CanvasRenderingContext2D,
   poses: Pose[],
   videoWidth: number,
-  videoHeight: number
+  videoHeight: number,
+  skipEarNoseEye: boolean = true
 ) {
   if (poses.length === 0) return
 
@@ -18,8 +19,8 @@ export function drawPose(
   ctx.translate(-ctx.canvas.width, 0)
 
   poses[0].keypoints.forEach((keypoint) => {
-    // Skip drawing for ears, nose, and eyes
     if (
+      skipEarNoseEye &&
       ['left_ear', 'right_ear', 'nose', 'left_eye', 'right_eye'].includes(
         keypoint.name ?? ''
       )

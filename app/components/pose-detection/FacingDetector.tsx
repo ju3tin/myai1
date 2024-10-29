@@ -7,8 +7,8 @@ import * as poseDetection from '@tensorflow-models/pose-detection'
 import Webcam from 'react-webcam'
 
 import '@tensorflow/tfjs-backend-webgl'
-import { drawPose } from '@/app/lib/poseDrawing'
 import { estimateOrientation } from '@/app/lib/orient'
+import { drawPose } from '@/app/lib/poseDrawing'
 
 interface FacingFeedback {
   angle: number
@@ -48,26 +48,22 @@ export default function FacingDetector() {
     initDetector()
   }, [])
 
-  const updateFacingFeedback = useCallback(
-    (pose: poseDetection.Pose) => {
-      const { angle, direction, isValid } = estimateOrientation(pose)
+  const updateFacingFeedback = useCallback((pose: poseDetection.Pose) => {
+    const { angle, direction, isValid } = estimateOrientation(pose)
 
-      
-      setFeedback({
-        angle,
-        message: direction,
-        isCorrect: isValid,
-      })
-    },
-    []
-  )
+    setFeedback({
+      angle,
+      message: direction,
+      isCorrect: isValid,
+    })
+  }, [])
 
   const drawPoseCallback = useCallback((pose: poseDetection.Pose) => {
     const ctx = canvasRef.current?.getContext('2d')
     const video = webcamRef.current?.video
     if (!ctx || !video) return
 
-    drawPose(ctx, [pose], video.videoWidth, video.videoHeight)
+    drawPose(ctx, [pose], video.videoWidth, video.videoHeight, false)
   }, [])
 
   const updateFps = useCallback(() => {
