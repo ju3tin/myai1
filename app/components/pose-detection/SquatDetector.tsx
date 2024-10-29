@@ -136,19 +136,13 @@ export default function SquatDetector() {
     (pose: poseDetection.Pose) => {
       if (!poseKeypoints) return // Ensure poseKeypoints is not null
       //flip horizontal of poseKeypoints
-      const flippedPoseKeypoints = {
-        ...poseKeypoints,
-        keypoints: poseKeypoints.keypoints.map((keypoint) => ({
-          ...keypoint,
-          x: standardImageRef.current!.width - keypoint.x,
-        })),
-      }
+      
       detectSquatWithRef({
         pose,
         squatPhase,
         setFeedback,
         onPhaseComplete: addSquatLog,
-        referenceSquatPose: flippedPoseKeypoints,
+        referenceSquatPose: poseKeypoints,
       })
     },
     [setFeedback, addSquatLog]
@@ -164,7 +158,7 @@ export default function SquatDetector() {
     async function detectPose() {
       if (webcamRef.current?.video?.readyState === 4) {
         const poses = await detector!.estimatePoses(webcamRef.current.video, {
-          flipHorizontal: true,
+          flipHorizontal: false,
         })
         if (poses.length > 0) {
           drawPose(poses[0])
@@ -190,7 +184,15 @@ export default function SquatDetector() {
     })
 
     if (poses.length > 0) {
-      setPoseKeypoints(poses[0])
+      // flip horizontal of pose[0]
+      const flippedPose = {
+        ...poses[0],
+        keypoints: poses[0].keypoints.map((keypoint) => ({
+          ...keypoint,
+          x: standardImageRef.current!.width - keypoint.x,
+        })),
+      }
+      setPoseKeypoints(flippedPose)
       const ctx = standardCanvasRef.current?.getContext('2d')
       if (ctx && standardImageRef.current) {
         // 设置 canvas 尺寸以匹配图片尺寸
@@ -199,15 +201,6 @@ export default function SquatDetector() {
 
         // 清除之前的绘制内容
         ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
-        // flip horizontal
-        const flippedPose = {
-          ...poses[0],
-          keypoints: poses[0].keypoints.map((keypoint) => ({
-            ...keypoint,
-            x: ctx.canvas.width - keypoint.x,
-            y: keypoint.y,
-          })),
-        }
         // 绘制姿势
         dp(ctx, [flippedPose], ctx.canvas.width, ctx.canvas.height, false)
       }
