@@ -310,7 +310,7 @@ export function detectSquatWithRef({
     }
   )
 
-  const SQUAT_SIMILARITY_THRESHOLD = 0.75 // 可以根据需要调整阈值
+  const SQUAT_SIMILARITY_THRESHOLD = 0.85 // 可以根据需要调整阈值
   const isSquatting = squatSimilarity >= SQUAT_SIMILARITY_THRESHOLD
 
   switch (squatPhase.current) {

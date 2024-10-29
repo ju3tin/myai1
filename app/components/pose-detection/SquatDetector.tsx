@@ -117,7 +117,7 @@ export default function SquatDetector() {
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
 
     // 绘制姿势
-    dp(ctx, [pose], video.videoWidth, video.videoHeight, false)
+    dp(ctx, [pose], video.videoWidth, video.videoHeight, true)
   }, [])
 
   const updateFps = useCallback(() => {
@@ -146,24 +146,23 @@ export default function SquatDetector() {
     [setFeedback, addSquatLog]
   )
 
+  const [activeTab, setActiveTab] = useState<string>('standardPose')
+
   useEffect(() => {
-    if (!detector || !webcamRef.current) return
+    if (!detector || !webcamRef.current || activeTab !== 'webcam') return
 
     let animationFrameId: number
 
     async function detectPose() {
-      if (webcamRef.current && webcamRef.current.video) {
-        const video = webcamRef.current.video
-        if (detector && video.readyState === 4) {
-          const poses = await detector.estimatePoses(video, {
-            flipHorizontal: true,
-          })
-          if (poses.length > 0) {
-            drawPose(poses[0])
-            detectSquatCallback(poses[0])
-          }
-          updateFps()
+      if (webcamRef.current?.video?.readyState === 4) {
+        const poses = await detector!.estimatePoses(webcamRef.current.video, {
+          flipHorizontal: true,
+        })
+        if (poses.length > 0) {
+          drawPose(poses[0])
+          detectSquatCallback(poses[0])
         }
+        updateFps()
       }
       animationFrameId = requestAnimationFrame(detectPose)
     }
@@ -171,11 +170,9 @@ export default function SquatDetector() {
     detectPose()
 
     return () => {
-      if (animationFrameId) {
-        cancelAnimationFrame(animationFrameId)
-      }
+      if (animationFrameId) cancelAnimationFrame(animationFrameId)
     }
-  }, [detector, drawPose, updateFps, detectSquatCallback])
+  }, [detector, drawPose, updateFps, detectSquatCallback, activeTab])
 
   const detectImagePose = useCallback(async () => {
     if (!detector || !standardImageRef.current) return
@@ -232,7 +229,7 @@ export default function SquatDetector() {
       </div>
 
       {selectedPose && (
-        <Tabs defaultValue="standardPose" className="w-full">
+        <Tabs defaultValue="standardPose" className="w-full" onValueChange={(value) => setActiveTab(value)}>
           <TabsList>
             <TabsTrigger value="standardPose">标准姿势</TabsTrigger>
             <TabsTrigger value="webcam">摄像头</TabsTrigger>
