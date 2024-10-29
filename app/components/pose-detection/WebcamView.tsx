@@ -103,7 +103,7 @@ export function WebcamView({
     const video = webcamRef.current?.video
     if (!ctx || !video) return
 
-    drawPose(ctx, poses, video.videoWidth, video.videoHeight)
+    drawPose(ctx, poses, video.videoWidth, video.videoHeight, false)
   }, [])
 
   const updateFps = useCallback(() => {
