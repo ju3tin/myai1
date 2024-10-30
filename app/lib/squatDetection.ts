@@ -222,12 +222,14 @@ export function detectSquatWithRef({
   setFeedback,
   onPhaseComplete,
   referenceSquatPose, // 新增：标准深蹲姿势参考
+  similarityThreshold,
 }: {
   pose: poseDetection.Pose
   squatPhase: React.MutableRefObject<SquatPhase>
   setFeedback: React.Dispatch<React.SetStateAction<Feedback>>
   onPhaseComplete: (phase: SquatPhase) => void
   referenceSquatPose: poseDetection.Pose
+  similarityThreshold: number
 }): void {
   const foundKeypoints = bodyKeypoints.map((name) =>
     pose.keypoints.find((kp) => kp.name === name)
@@ -310,8 +312,7 @@ export function detectSquatWithRef({
     }
   )
 
-  const SQUAT_SIMILARITY_THRESHOLD = 0.85 // 可以根据需要调整阈值
-  const isSquatting = squatSimilarity >= SQUAT_SIMILARITY_THRESHOLD
+  const isSquatting = squatSimilarity >= similarityThreshold
 
   switch (squatPhase.current) {
     case SquatPhase.STANDING:
@@ -337,7 +338,7 @@ export function detectSquatWithRef({
         isCorrect: false,
         message: '姿势差异较大，请参考示范动作',
       })
-    } else if (squatSimilarity < SQUAT_SIMILARITY_THRESHOLD) {
+    } else if (squatSimilarity < similarityThreshold) {
       setFeedback({
         isCorrect: false,
         message: '姿势接近正确，请继续调整',

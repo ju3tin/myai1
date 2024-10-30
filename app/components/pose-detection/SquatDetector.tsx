@@ -8,7 +8,9 @@ import Image from 'next/image'
 import Webcam from 'react-webcam'
 
 import '@tensorflow/tfjs-backend-webgl'
+
 import { Button } from '@/app/components/ui/button'
+import { Slider } from '@/app/components/ui/slider'
 import {
   Tabs,
   TabsContent,
@@ -57,6 +59,12 @@ export default function SquatDetector() {
   const [isLoading, setIsLoading] = useState(true) // 添加 loading 状态
   const standardImageRef = useRef<HTMLImageElement>(null)
   const standardCanvasRef = useRef<HTMLCanvasElement>(null)
+
+  const [similarityThreshold, setSimilarityThreshold] = useState<number>(0.85)
+
+  const handleThresholdChange = useCallback((value: number[]) => {
+    setSimilarityThreshold(value[0])
+  }, [])
 
   const captureScreenshot = useCallback(() => {
     if (!webcamRef.current) return ''
@@ -143,9 +151,10 @@ export default function SquatDetector() {
         setFeedback,
         onPhaseComplete: addSquatLog,
         referenceSquatPose: poseKeypoints,
+        similarityThreshold: similarityThreshold,
       })
     },
-    [setFeedback, addSquatLog, poseKeypoints]
+    [setFeedback, addSquatLog, poseKeypoints, similarityThreshold]
   )
 
   const [activeTab, setActiveTab] = useState<string>('standardPose')
@@ -226,6 +235,24 @@ export default function SquatDetector() {
             <span className="ml-2">{pose.label}</span>
           </Button>
         ))}
+      </div>
+
+      <div className="flex flex-col gap-2 p-4 bg-gray-50 rounded-lg">
+        <div className="flex items-center justify-between">
+          <label className="text-sm font-medium">
+            姿势相似度阈值: {similarityThreshold.toFixed(2)}
+          </label>
+          <span className="text-xs text-gray-500">值越高要求越严格</span>
+        </div>
+        <Slider
+          defaultValue={[0.85]}
+          max={1}
+          min={0}
+          step={0.01}
+          value={[similarityThreshold]}
+          onValueChange={handleThresholdChange}
+          className="w-full"
+        />
       </div>
 
       {selectedPose && (
