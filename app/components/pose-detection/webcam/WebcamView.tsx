@@ -105,7 +105,7 @@ export function WebcamView({
     const video = webcamRef.current?.video
     if (!ctx || !video) return
 
-    drawPose(ctx, poses, video.videoWidth, video.videoHeight, false)
+    drawPose(ctx, poses, video.videoWidth, video.videoHeight, false, false)
   }, [])
 
   const updateFps = useCallback(() => {
@@ -271,15 +271,7 @@ export function WebcamView({
           })
 
           if (poses.length > 0) {
-            // flip horizontal
-            const flippedPose = {
-              ...poses[0],
-              keypoints: poses[0].keypoints.map((keypoint) => ({
-                ...keypoint,
-                x: targetImageRef.current!.width - keypoint.x,
-              })),
-            }
-            setTargetPose(flippedPose)
+            setTargetPose(poses[0])
           }
         } catch (error) {
           console.error('Error estimating target pose:', error)
@@ -295,7 +287,7 @@ export function WebcamView({
     const targetImage = targetImageRef.current
     if (!ctx || !targetImage || !targetPose) return
 
-    drawPose(ctx, [targetPose], targetImage.width, targetImage.height)
+    drawPose(ctx, [targetPose], targetImage.width, targetImage.height, true, false)
   }, [targetPose, targetCanvasRef, targetImageRef])
 
   useEffect(() => {
@@ -399,7 +391,6 @@ export function WebcamView({
 
           <Webcam
             ref={webcamRef}
-            mirrored
             className="object-contain"
             audio={false}
             screenshotFormat="image/jpeg"

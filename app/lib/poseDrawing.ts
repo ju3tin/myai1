@@ -5,18 +5,20 @@ export function drawPose(
   poses: Pose[],
   videoWidth: number,
   videoHeight: number,
-  skipEarNoseEye: boolean = true
+  skipEarNoseEye: boolean = true,
+  needFlipHorizontal: boolean = false
 ) {
   if (poses.length === 0) return
 
-  ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
-
   ctx.canvas.width = videoWidth
   ctx.canvas.height = videoHeight
-
+  ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
+  
   ctx.save()
-  ctx.scale(-1, 1)
-  ctx.translate(-ctx.canvas.width, 0)
+  if (needFlipHorizontal) {
+    ctx.scale(-1, 1)
+    ctx.translate(-ctx.canvas.width, 0)
+  }
 
   poses[0].keypoints.forEach((keypoint) => {
     if (

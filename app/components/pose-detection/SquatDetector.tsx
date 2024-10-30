@@ -109,15 +109,8 @@ export default function SquatDetector() {
     const video = webcamRef.current?.video
     if (!ctx || !video) return
 
-    // 设置 canvas 尺寸以匹配视频尺寸
-    ctx.canvas.width = video.videoWidth
-    ctx.canvas.height = video.videoHeight
-
-    // 清除之前的绘制内容
-    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
-
     // 绘制姿势
-    dp(ctx, [pose], video.videoWidth, video.videoHeight, true)
+    dp(ctx, [pose], video.videoWidth, video.videoHeight)
   }, [])
 
   const updateFps = useCallback(() => {
@@ -180,29 +173,19 @@ export default function SquatDetector() {
     if (!detector || !standardImageRef.current) return
 
     const poses = await detector.estimatePoses(standardImageRef.current, {
-      flipHorizontal: true,
+      flipHorizontal: false,
     })
 
     if (poses.length > 0) {
-      // flip horizontal of pose[0]
-      const flippedPose = {
-        ...poses[0],
-        keypoints: poses[0].keypoints.map((keypoint) => ({
-          ...keypoint,
-          x: standardImageRef.current!.width - keypoint.x,
-        })),
-      }
-      setPoseKeypoints(flippedPose)
+      setPoseKeypoints(poses[0])
       const ctx = standardCanvasRef.current?.getContext('2d')
       if (ctx && standardImageRef.current) {
-        // 设置 canvas 尺寸以匹配图片尺寸
-        ctx.canvas.width = standardImageRef.current.width
-        ctx.canvas.height = standardImageRef.current.height
-
-        // 清除之前的绘制内容
-        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
-        // 绘制姿势
-        dp(ctx, [flippedPose], ctx.canvas.width, ctx.canvas.height, false)
+        dp(
+          ctx,
+          [poses[0]],
+          standardImageRef.current.width,
+          standardImageRef.current.height
+        )
       }
     }
   }, [detector])
@@ -268,7 +251,7 @@ export default function SquatDetector() {
               <div
                 className={`absolute inset-0 border-4 ${feedback.isCorrect ? 'border-green-500' : 'border-red-500'} z-10`}
               ></div>
-              <Webcam ref={webcamRef} className="w-full" mirrored />
+              <Webcam ref={webcamRef} className="w-full" />
               <canvas
                 ref={canvasRef}
                 className="absolute top-0 left-0 w-full h-full"

@@ -63,7 +63,7 @@ export default function FacingDetector() {
     const video = webcamRef.current?.video
     if (!ctx || !video) return
 
-    drawPose(ctx, [pose], video.videoWidth, video.videoHeight, false)
+    drawPose(ctx, [pose], video.videoWidth, video.videoHeight)
   }, [])
 
   const updateFps = useCallback(() => {
@@ -87,7 +87,7 @@ export default function FacingDetector() {
       if (!detector) return // Ensure detector is not null
       if (webcamRef.current?.video?.readyState === 4) {
         const poses = await detector.estimatePoses(webcamRef.current.video, {
-          flipHorizontal: true,
+          flipHorizontal: false,
         })
 
         if (poses.length > 0) {
@@ -112,7 +112,7 @@ export default function FacingDetector() {
         <div
           className={`absolute inset-0 border-4 ${feedback.isCorrect ? 'border-green-500' : 'border-red-500'} z-10`}
         ></div>
-        <Webcam ref={webcamRef} className="w-full" mirrored />
+        <Webcam ref={webcamRef} className="w-full" />
         <canvas
           ref={canvasRef}
           className="absolute top-0 left-0 w-full h-full"
