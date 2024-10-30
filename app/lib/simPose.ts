@@ -17,7 +17,13 @@ interface SimilarityOptions {
   normalize?: boolean // 是否需要姿势标准化
 }
 
-export function calculatePoseSimilarity(
+function adjustSimilarity(similarity: number): number {
+  // 使用幂函数增加区分度，可以根据需要调整幂指数
+  const power = 2
+  return Math.pow(similarity, power)
+}
+
+function calculatePoseSimilarity(
   pose1: poseDetection.Pose,
   pose2: poseDetection.Pose,
   options: SimilarityOptions
@@ -74,5 +80,7 @@ export function calculateCombinedSimilarity(
     totalWeight += weight
   })
 
-  return totalWeight > 0 ? weightedSimilarity / totalWeight : 0
+  return adjustSimilarity(
+    totalWeight > 0 ? weightedSimilarity / totalWeight : 0
+  )
 }

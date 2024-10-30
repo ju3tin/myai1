@@ -138,7 +138,7 @@ export default function SquatDetector() {
         referenceSquatPose: poseKeypoints,
       })
     },
-    [setFeedback, addSquatLog]
+    [setFeedback, addSquatLog, poseKeypoints]
   )
 
   const [activeTab, setActiveTab] = useState<string>('standardPose')

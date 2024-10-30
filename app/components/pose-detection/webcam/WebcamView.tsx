@@ -72,6 +72,35 @@ export function WebcamView({
   })
   const [isModelLoading, setIsModelLoading] = useState(true)
 
+  const [smoothedSimilarity, setSmoothedSimilarity] = useState<number>(0)
+  const similarityBuffer = useRef<number[]>([])
+  const BUFFER_SIZE = 5 // 平滑窗口大小
+  const SIMILARITY_THRESHOLD = 0.1 // 最小变化阈值
+  const FRAME_INTERVAL = 3 // 每隔几帧计算一次
+  const frameCounter = useRef(0)
+
+  // 平滑函数
+  const smoothSimilarity = useCallback(
+    (newValue: number) => {
+      similarityBuffer.current.push(newValue)
+      if (similarityBuffer.current.length > BUFFER_SIZE) {
+        similarityBuffer.current.shift()
+      }
+
+      const average =
+        similarityBuffer.current.reduce((a, b) => a + b, 0) /
+        similarityBuffer.current.length
+
+      // 只有变化超过阈值才更新
+      if (Math.abs(average - smoothedSimilarity) > SIMILARITY_THRESHOLD) {
+        setSmoothedSimilarity(average)
+        return average
+      }
+      return smoothedSimilarity
+    },
+    [smoothedSimilarity]
+  )
+
   const resetWeights = () => {
     setWeights({
       [SimilarityStrategy.KEY_ANGLES]: 0,
@@ -178,6 +207,10 @@ export function WebcamView({
   }
   const calculateSimilarity = useCallback(
     (pose: poseDetection.Pose) => {
+      // 控制计算频率
+      frameCounter.current += 1
+      if (frameCounter.current % FRAME_INTERVAL !== 0) return
+
       if (targetPose) {
         const similarity = calculateCombinedSimilarity(pose, targetPose, {
           strategies: [
@@ -199,14 +232,20 @@ export function WebcamView({
         })
 
         if (typeof similarity === 'number') {
-          onSimilarityUpdate(similarity)
-          logPoseIfNeeded(pose, similarity)
-        } else {
-          console.error('Similarity calculation error:', similarity)
+          const smoothed = smoothSimilarity(similarity)
+          onSimilarityUpdate(smoothed)
+          logPoseIfNeeded(pose, smoothed)
         }
       }
     },
-    [targetPose, onSimilarityUpdate, logPoseIfNeeded, selectedAngles, weights]
+    [
+      targetPose,
+      onSimilarityUpdate,
+      logPoseIfNeeded,
+      selectedAngles,
+      weights,
+      smoothSimilarity,
+    ]
   )
 
   useEffect(() => {
