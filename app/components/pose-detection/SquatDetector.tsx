@@ -54,6 +54,7 @@ export default function SquatDetector() {
   const [poseKeypoints, setPoseKeypoints] = useState<poseDetection.Pose | null>(
     null
   )
+  const [isLoading, setIsLoading] = useState(true) // 添加 loading 状态
   const standardImageRef = useRef<HTMLImageElement>(null)
   const standardCanvasRef = useRef<HTMLCanvasElement>(null)
 
@@ -90,16 +91,23 @@ export default function SquatDetector() {
 
   useEffect(() => {
     async function initDetector() {
-      await tf.ready()
-      await tf.setBackend('webgl')
-      const modelConfig = {
-        modelType: poseDetection.movenet.modelType.SINGLEPOSE_THUNDER,
+      setIsLoading(true) // 开始加载
+      try {
+        await tf.ready()
+        await tf.setBackend('webgl')
+        const modelConfig = {
+          modelType: poseDetection.movenet.modelType.SINGLEPOSE_THUNDER,
+        }
+        const detector = await poseDetection.createDetector(
+          poseDetection.SupportedModels.MoveNet,
+          modelConfig
+        )
+        setDetector(detector)
+      } catch (error) {
+        console.error('Failed to initialize detector:', error)
+      } finally {
+        setIsLoading(false) // 结束加载
       }
-      const detector = await poseDetection.createDetector(
-        poseDetection.SupportedModels.MoveNet,
-        modelConfig
-      )
-      setDetector(detector)
     }
     initDetector()
   }, [])
@@ -128,7 +136,6 @@ export default function SquatDetector() {
   const detectSquatCallback = useCallback(
     (pose: poseDetection.Pose) => {
       if (!poseKeypoints) return // Ensure poseKeypoints is not null
-      //flip horizontal of poseKeypoints
 
       detectSquatWithRef({
         pose,
@@ -196,6 +203,15 @@ export default function SquatDetector() {
     },
     [selectedPose]
   )
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900"></div>
+        <p className="mt-4 text-gray-600">正在加载姿势检测模型...</p>
+      </div>
+    )
+  }
 
   return (
     <div className="flex flex-col gap-4">
