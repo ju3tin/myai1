@@ -24,7 +24,7 @@ import {
   SimilarityStrategy,
 } from '@/app/lib/simPose'
 
-import { PoseLogEntry } from './types'
+import { PoseLogEntry } from '../types'
 
 interface WebcamViewProps {
   targetImageRef: RefObject<HTMLImageElement>
@@ -64,17 +64,18 @@ export function WebcamView({
     'rightHipAngle',
     'rightKneeAngle',
   ])
+  
   const [weights, setWeights] = useState({
     [SimilarityStrategy.KEY_ANGLES]: 0,
-    [SimilarityStrategy.RELATIVE_ANGLES]: 0,
-    [SimilarityStrategy.INVARIANT_FEATURES]: 1,
+    [SimilarityStrategy.RELATIVE_ANGLES]: 1,
+    [SimilarityStrategy.INVARIANT_FEATURES]: 0,
   })
 
   const resetWeights = () => {
     setWeights({
       [SimilarityStrategy.KEY_ANGLES]: 0,
-      [SimilarityStrategy.RELATIVE_ANGLES]: 0,
-      [SimilarityStrategy.INVARIANT_FEATURES]: 1,
+      [SimilarityStrategy.RELATIVE_ANGLES]: 1,
+      [SimilarityStrategy.INVARIANT_FEATURES]: 0,
     })
   }
 
@@ -169,17 +170,9 @@ export function WebcamView({
   const calculateSimilarity = useCallback(
     (pose: poseDetection.Pose) => {
       if (targetPose) {
-        // flip horizontal of targetPose
-        const flippedTargetPose = {
-          ...targetPose,
-          keypoints: targetPose.keypoints.map((keypoint) => ({
-            ...keypoint,
-            x: targetImageRef.current!.width - keypoint.x,
-          })),
-        }
         const similarity = calculateCombinedSimilarity(
           pose,
-          flippedTargetPose,
+          targetPose,
           {
             strategies: [
               {
@@ -227,12 +220,12 @@ export function WebcamView({
         ) {
           try {
             const poses = await detector.estimatePoses(video, {
-              flipHorizontal: true,
+              flipHorizontal: false,
             })
-            drawPoseOnCanvas(poses)
             updateFps()
             if (poses.length > 0) {
               calculateSimilarity(poses[0])
+              drawPoseOnCanvas(poses)
             }
           } catch (error) {
             console.error('Error estimating poses:', error)
@@ -269,11 +262,19 @@ export function WebcamView({
 
           // 使用 canvas 进行姿势估计
           const poses = await detector.estimatePoses(targetImageRef.current, {
-            flipHorizontal: true,
+            flipHorizontal: false,
           })
 
           if (poses.length > 0) {
-            setTargetPose(poses[0])
+            // flip horizontal
+            const flippedPose = {
+              ...poses[0],
+              keypoints: poses[0].keypoints.map((keypoint) => ({
+                ...keypoint,
+                x: targetImageRef.current!.width - keypoint.x,
+              })),
+            }
+            setTargetPose(flippedPose)
           }
         } catch (error) {
           console.error('Error estimating target pose:', error)
@@ -289,28 +290,7 @@ export function WebcamView({
     const targetImage = targetImageRef.current
     if (!ctx || !targetImage || !targetPose) return
 
-    // Clear the canvas
-    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
-    // Save the current context state
-    ctx.save()
-
-    // Draw the image scaled to fit the canvas
-    ctx.drawImage(targetImage, 0, 0, ctx.canvas.width, ctx.canvas.height)
-
-    // Restore the context state
-    ctx.restore()
-
-    // Scale and flip the pose keypoints
-    const scaledPose = {
-      ...targetPose,
-      keypoints: targetPose.keypoints.map((keypoint) => ({
-        ...keypoint,
-        x: ctx.canvas.width - keypoint.x,
-        y: keypoint.y,
-      })),
-    }
-    // Draw the scaled and flipped pose
-    drawPose(ctx, [scaledPose], ctx.canvas.width, ctx.canvas.height)
+    drawPose(ctx, [targetPose], targetImage.width, targetImage.height)
   }, [targetPose, targetCanvasRef, targetImageRef])
 
   useEffect(() => {

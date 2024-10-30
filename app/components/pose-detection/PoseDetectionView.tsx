@@ -21,7 +21,7 @@ import {
 import { LogView } from './LogView'
 import { TargetImage } from './TargetImage'
 import { PoseLogEntry } from './types'
-import { WebcamView } from './WebcamView'
+import { WebcamView } from './webcam'
 
 interface DataPoint {
   time: number
