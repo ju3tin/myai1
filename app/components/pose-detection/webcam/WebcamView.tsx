@@ -64,12 +64,13 @@ export function WebcamView({
     'rightHipAngle',
     'rightKneeAngle',
   ])
-  
+
   const [weights, setWeights] = useState({
     [SimilarityStrategy.KEY_ANGLES]: 0,
     [SimilarityStrategy.RELATIVE_ANGLES]: 1,
     [SimilarityStrategy.INVARIANT_FEATURES]: 0,
   })
+  const [isModelLoading, setIsModelLoading] = useState(true)
 
   const resetWeights = () => {
     setWeights({
@@ -121,16 +122,24 @@ export function WebcamView({
 
   useEffect(() => {
     async function initDetector() {
-      await tf.ready()
-      await tf.setBackend('webgl')
-      const modelConfig = {
-        modelType: poseDetection.movenet.modelType.SINGLEPOSE_THUNDER,
+      setIsModelLoading(true) // 开始加载
+      try {
+        await tf.ready()
+        await tf.setBackend('webgl')
+        const modelConfig = {
+          modelType: poseDetection.movenet.modelType.SINGLEPOSE_THUNDER,
+        }
+        const detector = await poseDetection.createDetector(
+          poseDetection.SupportedModels.MoveNet,
+          modelConfig
+        )
+        setDetector(detector)
+      } catch (error) {
+        console.error('Error initializing detector:', error)
+        setError('Failed to initialize pose detector')
+      } finally {
+        setIsModelLoading(false) // 结束加载
       }
-      const detector = await poseDetection.createDetector(
-        poseDetection.SupportedModels.MoveNet,
-        modelConfig
-      )
-      setDetector(detector)
     }
     initDetector()
   }, [])
@@ -170,28 +179,24 @@ export function WebcamView({
   const calculateSimilarity = useCallback(
     (pose: poseDetection.Pose) => {
       if (targetPose) {
-        const similarity = calculateCombinedSimilarity(
-          pose,
-          targetPose,
-          {
-            strategies: [
-              {
-                strategy: SimilarityStrategy.KEY_ANGLES,
-                weight: weights[SimilarityStrategy.KEY_ANGLES],
-                selectedAngles: selectedAngles,
-              },
-              {
-                strategy: SimilarityStrategy.RELATIVE_ANGLES,
-                weight: weights[SimilarityStrategy.RELATIVE_ANGLES],
-              },
-              {
-                strategy: SimilarityStrategy.INVARIANT_FEATURES,
-                weight: weights[SimilarityStrategy.INVARIANT_FEATURES],
-              },
-            ],
-            normalize: false,
-          }
-        )
+        const similarity = calculateCombinedSimilarity(pose, targetPose, {
+          strategies: [
+            {
+              strategy: SimilarityStrategy.KEY_ANGLES,
+              weight: weights[SimilarityStrategy.KEY_ANGLES],
+              selectedAngles: selectedAngles,
+            },
+            {
+              strategy: SimilarityStrategy.RELATIVE_ANGLES,
+              weight: weights[SimilarityStrategy.RELATIVE_ANGLES],
+            },
+            {
+              strategy: SimilarityStrategy.INVARIANT_FEATURES,
+              weight: weights[SimilarityStrategy.INVARIANT_FEATURES],
+            },
+          ],
+          normalize: false,
+        })
 
         if (typeof similarity === 'number') {
           onSimilarityUpdate(similarity)
@@ -301,6 +306,14 @@ export function WebcamView({
 
   return (
     <Card className="flex flex-col">
+      {isModelLoading && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white p-4 rounded-lg shadow-lg text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-2"></div>
+            <p>Loading pose detection model...</p>
+          </div>
+        </div>
+      )}
       <CardHeader className="flex-shrink-0">
         <div className="flex flex-col space-y-4">
           <div className="flex items-center justify-between">
