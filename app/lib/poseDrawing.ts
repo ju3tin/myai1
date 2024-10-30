@@ -13,7 +13,7 @@ export function drawPose(
   ctx.canvas.width = videoWidth
   ctx.canvas.height = videoHeight
   ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
-  
+
   ctx.save()
   if (needFlipHorizontal) {
     ctx.scale(-1, 1)
