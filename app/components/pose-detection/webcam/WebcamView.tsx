@@ -75,7 +75,7 @@ export function WebcamView({
   const [smoothedSimilarity, setSmoothedSimilarity] = useState<number>(0)
   const similarityBuffer = useRef<number[]>([])
   const BUFFER_SIZE = 5 // 平滑窗口大小
-  const SIMILARITY_THRESHOLD = 0.1 // 最小变化阈值
+  const SIMILARITY_THRESHOLD = 0.001 // 最小变化阈值
   const FRAME_INTERVAL = 3 // 每隔几帧计算一次
   const frameCounter = useRef(0)
 
