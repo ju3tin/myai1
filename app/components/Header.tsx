@@ -19,6 +19,9 @@ export default function Header() {
           <Button variant="ghost" asChild>
             <Link href="/facing-detection">Facing Detection</Link>
           </Button>
+          <Button variant="ghost" asChild>
+            <Link href="/pose-detection-3d">3D Pose Detection</Link>
+          </Button>
         </nav>
       </div>
     </header>
