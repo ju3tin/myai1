@@ -1,4 +1,4 @@
-import { PoseDetection3D } from '@/app/components/pose-detection-3d/PoseDetection3D'
+import { PoseDetection3D } from '@/app/components/pose-detection-3d/'
 import { PoseDetectorProvider } from '@/app/contexts/PoseDetectorContext'
 
 export default function PoseDetection3DPage() {
