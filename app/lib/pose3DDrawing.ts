@@ -29,57 +29,71 @@ export function draw3DPose(
   flipHorizontal: boolean = false
 ) {
   // Clear canvas
-  ctx.clearRect(0, 0, videoWidth, videoHeight)
-
-  // Set canvas size to match video
+  console.log(pose)
   ctx.canvas.width = videoWidth
   ctx.canvas.height = videoHeight
+  ctx.clearRect(0, 0, videoWidth, videoHeight)
 
-  // Flip horizontally
   if (flipHorizontal) {
-    ctx.translate(videoWidth, 0)
     ctx.scale(-1, 1)
+    ctx.translate(-videoWidth, 0)
   }
 
-  // Draw keypoints
-  pose.keypoints3D?.forEach((keypoint) => {
-    if (keypoint.score && keypoint.score > 0.3) {
-      const x = keypoint.x * videoWidth
-      const y = keypoint.y * videoHeight
-      const z = keypoint.z || 0
+  // Draw keypoints with depth-based visualization
+  pose.keypoints?.forEach((keypoint) => {
+    if (!keypoint.score || keypoint.score <= 0.3) return
 
-      // Adjust point size based on Z depth
-      const radius = Math.max(4, 8 - Math.abs(z) * 2)
+    const x = keypoint.x
+    const y = keypoint.y
+    const z = keypoint.z || 0
 
-      ctx.beginPath()
-      ctx.arc(x, y, radius, 0, 2 * Math.PI)
-      // yellow point
-      ctx.fillStyle = `rgba(255, 255, 0, ${0.7 + z * 0.3})`
-      ctx.fill()
-    }
+    // Adjust point size and color based on Z depth
+    const radius = Math.max(4, 8 - Math.abs(z) * 2)
+    const opacity = normalizeDepth(z)
+
+    // Color points based on body part type
+    let color = '#ff0000' // Default red
+    if (keypoint.name?.includes('left_')) color = '#00ff00' // Green for left
+    if (keypoint.name?.includes('right_')) color = '#ffa500' // Orange for right
+    if (keypoint.name === 'nose') color = '#ffffff' // White for nose
+
+    ctx.beginPath()
+    ctx.arc(x, y, radius, 0, 2 * Math.PI)
+    ctx.fillStyle = `${color}${Math.floor(opacity * 255)
+      .toString(16)
+      .padStart(2, '0')}`
+    ctx.fill()
   })
 
-  // Draw connections
+  // Draw connections with depth-based colors
   connections.forEach(([start, end]) => {
-    const startPoint = pose.keypoints3D?.find((kp) => kp.name === start)
-    const endPoint = pose.keypoints3D?.find((kp) => kp.name === end)
+    const startPoint = pose.keypoints?.find((kp) => kp.name === start)
+    const endPoint = pose.keypoints?.find((kp) => kp.name === end)
 
     if (
-      startPoint?.score &&
-      endPoint?.score &&
-      startPoint.score > 0.3 &&
-      endPoint.score > 0.3
-    ) {
-      ctx.beginPath()
-      ctx.moveTo(startPoint.x * videoWidth, startPoint.y * videoHeight)
-      ctx.lineTo(endPoint.x * videoWidth, endPoint.y * videoHeight)
+      !startPoint?.score ||
+      !endPoint?.score ||
+      startPoint.score <= 0.3 ||
+      endPoint.score <= 0.3
+    )
+      return
 
-      // Adjust line color based on Z depth
-      const avgZ = ((startPoint.z || 0) + (endPoint.z || 0)) / 2
-      // red line
-      ctx.strokeStyle = `rgba(255, 0, 0, ${0.7 + avgZ * 0.3})`
-      ctx.lineWidth = 2
-      ctx.stroke()
-    }
+    const avgZ = ((startPoint.z || 0) + (endPoint.z || 0)) / 2
+    const opacity = normalizeDepth(avgZ)
+
+    ctx.beginPath()
+    ctx.moveTo(startPoint.x, startPoint.y)
+    ctx.lineTo(endPoint.x, endPoint.y)
+    ctx.strokeStyle = `#ffffff${Math.floor(opacity * 255)
+      .toString(16)
+      .padStart(2, '0')}`
+    ctx.lineWidth = 2
+    ctx.stroke()
   })
+}
+
+// Helper function to normalize depth values to opacity range
+function normalizeDepth(z: number): number {
+  // Convert z value to opacity between 0.3 and 1.0
+  return Math.max(0.3, Math.min(1.0, 1 - Math.abs(z) * 0.5))
 }

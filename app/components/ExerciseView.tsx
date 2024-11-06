@@ -60,7 +60,7 @@ export default function ExerciseView() {
       const video = webcamRef.current?.video
       if (!ctx || !video) return
 
-      dp(ctx, poses, video.videoWidth, video.videoHeight)
+      dp(ctx, poses, video.videoWidth, video.videoHeight, false)
     },
     [webcamRef]
   )
@@ -157,7 +157,7 @@ export default function ExerciseView() {
         ) {
           try {
             const newPoses = await detector.estimatePoses(video, {
-              flipHorizontal: true,
+              flipHorizontal: false,
             })
             setPoses(newPoses)
             drawPose(newPoses)
@@ -215,7 +215,6 @@ export default function ExerciseView() {
                     {error && <p className="text-red-500">Error: {error}</p>}
                     <Webcam
                       ref={webcamRef}
-                      mirrored
                       className="w-full"
                       audio={false}
                       screenshotFormat="image/jpeg"

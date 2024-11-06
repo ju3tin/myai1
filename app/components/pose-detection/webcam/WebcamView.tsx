@@ -134,7 +134,7 @@ export function WebcamView({
     const video = webcamRef.current?.video
     if (!ctx || !video) return
 
-    drawPose(ctx, poses, video.videoWidth, video.videoHeight, false, false)
+    drawPose(ctx, poses, video.videoWidth, video.videoHeight, false)
   }, [])
 
   const updateFps = useCallback(() => {
@@ -331,8 +331,7 @@ export function WebcamView({
       [targetPose],
       targetImage.width,
       targetImage.height,
-      true,
-      false
+      true
     )
   }, [targetPose, targetCanvasRef, targetImageRef])
 

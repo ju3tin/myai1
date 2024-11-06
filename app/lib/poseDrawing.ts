@@ -6,19 +6,12 @@ export function drawPose(
   videoWidth: number,
   videoHeight: number,
   skipEarNoseEye: boolean = true,
-  needFlipHorizontal: boolean = false
 ) {
   if (poses.length === 0) return
 
   ctx.canvas.width = videoWidth
   ctx.canvas.height = videoHeight
   ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
-
-  ctx.save()
-  if (needFlipHorizontal) {
-    ctx.scale(-1, 1)
-    ctx.translate(-ctx.canvas.width, 0)
-  }
 
   poses[0].keypoints.forEach((keypoint) => {
     if (
@@ -35,12 +28,20 @@ export function drawPose(
       ctx.fillStyle = 'red'
       ctx.fill()
 
-      ctx.save()
-      ctx.scale(-1, 1)
       ctx.font = '12px Arial'
+      const text = keypoint.name ?? 'unnamed'
+      console.log('Drawing text:', text, 'at', keypoint.x, keypoint.y)
+
+      ctx.fillStyle = 'black'
+      ctx.fillRect(
+        keypoint.x + 5,
+        keypoint.y - 20,
+        ctx.measureText(text).width + 4,
+        20
+      )
+
       ctx.fillStyle = 'white'
-      ctx.fillText(keypoint.name ?? '', -keypoint.x + 5, keypoint.y - 5)
-      ctx.restore()
+      ctx.fillText(text, keypoint.x + 5, keypoint.y - 5)
     }
   })
 
@@ -79,6 +80,4 @@ export function drawPose(
       ctx.stroke()
     }
   })
-
-  ctx.restore()
 }
