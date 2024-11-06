@@ -5,7 +5,7 @@ export function drawPose(
   poses: Pose[],
   videoWidth: number,
   videoHeight: number,
-  skipEarNoseEye: boolean = true,
+  skipEarNoseEye: boolean = true
 ) {
   if (poses.length === 0) return
 

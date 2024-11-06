@@ -65,7 +65,6 @@ export function PoseDetection3D() {
           if (poses && poses.length > 0 && canvasRef.current) {
             const ctx = canvasRef.current.getContext('2d')
             if (ctx) {
-              
               draw3DPose(
                 ctx,
                 poses[0],
@@ -131,10 +130,7 @@ export function PoseDetection3D() {
             facingMode: 'user',
           }}
         />
-        <canvas
-          ref={canvasRef}
-          className="absolute top-0 left-0"
-        />
+        <canvas ref={canvasRef} className="absolute top-0 left-0" />
         <div className="mt-2 top-2 left-2 bg-black bg-opacity-60 text-white p-2 rounded max-h-[calc(100%-16px)] overflow-y-auto w-64">
           <h3 className="font-semibold mb-2">Keypoints Data</h3>
           {keypointsData.map((kp, index) => (

@@ -326,13 +326,7 @@ export function WebcamView({
     const targetImage = targetImageRef.current
     if (!ctx || !targetImage || !targetPose) return
 
-    drawPose(
-      ctx,
-      [targetPose],
-      targetImage.width,
-      targetImage.height,
-      true
-    )
+    drawPose(ctx, [targetPose], targetImage.width, targetImage.height, true)
   }, [targetPose, targetCanvasRef, targetImageRef])
 
   useEffect(() => {
