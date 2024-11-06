@@ -25,13 +25,12 @@ export function draw3DPose(
   ctx: CanvasRenderingContext2D,
   pose: poseDetection.Pose,
   videoWidth: number,
-  videoHeight: number,
+  videoHeight: number
 ) {
   // Clear canvas
   ctx.canvas.width = videoWidth
   ctx.canvas.height = videoHeight
   ctx.clearRect(0, 0, videoWidth, videoHeight)
-
 
   // Draw keypoints with depth-based visualization
   pose.keypoints?.forEach((keypoint) => {

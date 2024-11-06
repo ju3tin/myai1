@@ -65,12 +65,7 @@ export function PoseDetection3D() {
           if (poses && poses.length > 0 && canvasRef.current) {
             const ctx = canvasRef.current.getContext('2d')
             if (ctx) {
-              draw3DPose(
-                ctx,
-                poses[0],
-                video.videoWidth,
-                video.videoHeight
-              )
+              draw3DPose(ctx, poses[0], video.videoWidth, video.videoHeight)
 
               // Update keypoints data
               const newKeypointsData = poses[0].keypoints.map((kp) => ({
@@ -132,24 +127,22 @@ export function PoseDetection3D() {
             ref={canvasRef}
             className="absolute top-0 left-0 w-full h-full"
           />
-          </div>
-          <div className="mt-2 top-2 right-2 bg-black bg-opacity-50 text-white p-2 rounded w-64">
-            FPS: {fps}
-          </div>
-          <div className="mt-2 top-2 left-2 bg-black bg-opacity-60 text-white p-2 rounded max-h-[calc(100%-16px)] overflow-y-auto w-64">
-            <h3 className="font-semibold mb-2">Keypoints Data</h3>
-            {keypointsData.map((kp, index) => (
-              <div key={index} className="text-xs mb-1">
-                <div className="font-medium">{kp.name}</div>
-                <div>Score: {kp.score}</div>
-                <div>
-                  X: {kp.x}, Y: {kp.y}, Z: {kp.z}
-                </div>
+        </div>
+        <div className="mt-2 top-2 right-2 bg-black bg-opacity-50 text-white p-2 rounded w-64">
+          FPS: {fps}
+        </div>
+        <div className="mt-2 top-2 left-2 bg-black bg-opacity-60 text-white p-2 rounded max-h-[calc(100%-16px)] overflow-y-auto w-64">
+          <h3 className="font-semibold mb-2">Keypoints Data</h3>
+          {keypointsData.map((kp, index) => (
+            <div key={index} className="text-xs mb-1">
+              <div className="font-medium">{kp.name}</div>
+              <div>Score: {kp.score}</div>
+              <div>
+                X: {kp.x}, Y: {kp.y}, Z: {kp.z}
               </div>
-            ))}
-          </div>
-          
-        
+            </div>
+          ))}
+        </div>
       </CardContent>
     </Card>
   )
