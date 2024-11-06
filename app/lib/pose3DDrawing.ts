@@ -26,18 +26,12 @@ export function draw3DPose(
   pose: poseDetection.Pose,
   videoWidth: number,
   videoHeight: number,
-  flipHorizontal: boolean = false
 ) {
   // Clear canvas
-  console.log(pose)
   ctx.canvas.width = videoWidth
   ctx.canvas.height = videoHeight
   ctx.clearRect(0, 0, videoWidth, videoHeight)
 
-  if (flipHorizontal) {
-    ctx.scale(-1, 1)
-    ctx.translate(-videoWidth, 0)
-  }
 
   // Draw keypoints with depth-based visualization
   pose.keypoints?.forEach((keypoint) => {
