@@ -35,7 +35,7 @@ export function MPPoseDetection() {
     const targetFPS = 30 // Limit to 30 FPS
     const frameInterval = 1000 / targetFPS
     const ctx = canvasRef.current?.getContext('2d')
-    
+
     const detectPose = async (timestamp: number) => {
       // Skip frame if too soon
       if (timestamp - lastFrameTime < frameInterval) {
@@ -61,22 +61,32 @@ export function MPPoseDetection() {
       try {
         poseLandmarker.detectForVideo(video, timestamp, (result) => {
           ctx.save()
-          ctx.clearRect(0, 0, canvasRef.current!.width, canvasRef.current!.height)
+          ctx.clearRect(
+            0,
+            0,
+            canvasRef.current!.width,
+            canvasRef.current!.height
+          )
           ctx.imageSmoothingEnabled = true
           ctx.imageSmoothingQuality = 'high'
-          
+
           const drawingUtils = new DrawingUtils(ctx)
           for (const landmark of result.landmarks) {
             drawingUtils.drawLandmarks(landmark, {
-              radius: (data) => DrawingUtils.lerp(data.from!.z, -0.5, 0.5, 3, 1),
+              radius: (data) =>
+                DrawingUtils.lerp(data.from!.z, -0.5, 0.5, 3, 1),
               lineWidth: 1,
               color: '#00FF00',
               fillColor: '#00FF00',
             })
-            drawingUtils.drawConnectors(landmark, PoseLandmarker.POSE_CONNECTIONS, {
-              lineWidth: 1,
-              color: '#00FF00',
-            })
+            drawingUtils.drawConnectors(
+              landmark,
+              PoseLandmarker.POSE_CONNECTIONS,
+              {
+                lineWidth: 1,
+                color: '#00FF00',
+              }
+            )
           }
           ctx.restore()
         })
@@ -85,7 +95,11 @@ export function MPPoseDetection() {
         frameCount.current++
         const now = performance.now()
         if (now - lastFpsUpdate.current > 1000) {
-          setFps(Math.round((frameCount.current * 1000) / (now - lastFpsUpdate.current)))
+          setFps(
+            Math.round(
+              (frameCount.current * 1000) / (now - lastFpsUpdate.current)
+            )
+          )
           frameCount.current = 0
           lastFpsUpdate.current = now
         }
