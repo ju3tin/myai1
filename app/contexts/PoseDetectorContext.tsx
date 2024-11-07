@@ -44,7 +44,7 @@ export function PoseDetectorProvider({
         const detectorConfig: poseDetection.BlazePoseMediaPipeModelConfig = {
           runtime: 'mediapipe',
           modelType: 'full',
-          solutionPath: '/pose',
+          solutionPath: 'https://cdn.jsdelivr.net/npm/@mediapipe/pose',
           enableSmoothing: true,
         }
 
