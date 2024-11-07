@@ -21,6 +21,7 @@
 ## Tech Stack & Packages
 
 ### Frontend
+
 - Next.js 14 (App Router)
 - React 18
 - TypeScript
@@ -32,11 +33,13 @@
 - Recharts (for potential performance visualization)
 
 ### AI & Computer Vision
+
 - MediaPipe Pose Solution
 - TensorFlow.js Pose Detection
 - WebGL/WebGPU Backend for Performance
 
 ### Development Tools
+
 - pnpm (Package Management)
 - ESLint
 - Prettier
@@ -63,6 +66,7 @@ rehabmotion/
 ## Landing Page Components
 
 ### Desktop Layout
+
 - Hero Section with Pose Detection Demo
 - Feature Highlights
 - How It Works Section
@@ -70,6 +74,7 @@ rehabmotion/
 - User Testimonials
 
 ### Mobile Layout
+
 - Responsive Hero Section
 - Collapsible Feature Sections
 - Touch-Friendly Exercise Selection
@@ -79,11 +84,13 @@ rehabmotion/
 Based on the `globals.css`, the color scheme uses:
 
 ### Primary Colors
+
 - Primary (Chinese Red): `--primary: 0 80% 50%`
 - Secondary (Cyan): `--secondary: 180 60% 45%`
 - Accent (Gold): `--accent: 48 96% 53%`
 
 ### Neutral Colors
+
 - Background: White
 - Foreground: Dark Gray
 - Muted: Light Gray
@@ -91,27 +98,32 @@ Based on the `globals.css`, the color scheme uses:
 ## Copywriting
 
 ### Headline
+
 - "RehabMotion: AI-Powered Rehabilitation Exercises"
 - "Precision Guidance for Your Recovery Journey"
 
 ### Subheadlines
+
 - "Real-time Pose Detection"
 - "Personalized Exercise Feedback"
 - "Professional Rehabilitation at Your Fingertips"
 
 ### Call-to-Action Buttons
+
 - "Start Your Rehabilitation"
 - "Try Pose Detection"
 - "Learn More"
 - "View Exercises"
 
 ### Feature Descriptions
+
 - "Accurate Form Analysis"
 - "Instant Feedback"
 - "Adaptive Difficulty Levels"
 - "Track Your Progress"
 
 ### Error Messages
+
 - "Webcam Access Required"
 - "Pose Detection Unavailable"
 - "Exercise Not Recognized"
