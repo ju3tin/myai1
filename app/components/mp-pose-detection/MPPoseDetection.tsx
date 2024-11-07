@@ -15,6 +15,8 @@ import { Label } from '@/app/components/ui/label'
 import { Switch } from '@/app/components/ui/switch'
 import { useMPPoseDetector } from '@/app/contexts/MPPoseDetectorContext'
 
+type RunningMode = 'IMAGE' | 'VIDEO'
+
 export function MPPoseDetection() {
   const { poseLandmarker, isLoading, error } = useMPPoseDetector()
   const webcamRef = useRef<Webcam>(null)
@@ -23,6 +25,7 @@ export function MPPoseDetection() {
   const [fps, setFps] = useState(0)
   const lastFpsUpdate = useRef(performance.now())
   const frameCount = useRef(0)
+  const [runningMode, setRunningMode] = useState<RunningMode>('VIDEO')
 
   useEffect(() => {
     if (!poseLandmarker || !webcamRef.current?.video || !isDetecting) return
@@ -88,6 +91,11 @@ export function MPPoseDetection() {
     }
   }, [poseLandmarker, isDetecting])
 
+  useEffect(() => {
+    if (!poseLandmarker) return
+    poseLandmarker.setOptions({ runningMode })
+  }, [poseLandmarker, runningMode])
+
   if (isLoading)
     return (
       <div className="flex justify-center items-center h-full w-full">
@@ -106,13 +114,27 @@ export function MPPoseDetection() {
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle>MediaPipe Pose Detection</CardTitle>
-          <div className="flex items-center space-x-2">
-            <Switch
-              id="pose-detection"
-              checked={isDetecting}
-              onCheckedChange={setIsDetecting}
-            />
-            <Label htmlFor="pose-detection">Detection</Label>
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="running-mode"
+                checked={runningMode === 'VIDEO'}
+                onCheckedChange={(checked) =>
+                  setRunningMode(checked ? 'VIDEO' : 'IMAGE')
+                }
+              />
+              <Label htmlFor="running-mode">
+                {runningMode === 'VIDEO' ? 'Video' : 'Image'} Mode
+              </Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="pose-detection"
+                checked={isDetecting}
+                onCheckedChange={setIsDetecting}
+              />
+              <Label htmlFor="pose-detection">Detection</Label>
+            </div>
           </div>
         </div>
       </CardHeader>
