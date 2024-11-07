@@ -22,8 +22,6 @@ export function MPPoseDetection() {
   const webcamRef = useRef<Webcam>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [isDetecting, setIsDetecting] = useState(false)
-  const [fps, setFps] = useState(0)
-  const lastFpsUpdate = useRef(performance.now())
   const frameCount = useRef(0)
   const [runningMode, setRunningMode] = useState<RunningMode>('VIDEO')
 
@@ -91,18 +89,6 @@ export function MPPoseDetection() {
           ctx.restore()
         })
 
-        // Update FPS
-        frameCount.current++
-        const now = performance.now()
-        if (now - lastFpsUpdate.current > 1000) {
-          setFps(
-            Math.round(
-              (frameCount.current * 1000) / (now - lastFpsUpdate.current)
-            )
-          )
-          frameCount.current = 0
-          lastFpsUpdate.current = now
-        }
       } catch (err) {
         console.error('Error detecting pose:', err)
       }
@@ -175,9 +161,6 @@ export function MPPoseDetection() {
             ref={canvasRef}
             className="absolute top-0 left-0 w-full h-full"
           />
-        </div>
-        <div className="mt-2 top-2 right-2 bg-black bg-opacity-50 text-white p-2 rounded">
-          FPS: {fps}
         </div>
       </CardContent>
     </Card>
