@@ -30,15 +30,12 @@ export function MPPoseDetection() {
     let animationFrame: number
 
     const detectPose = async () => {
-      console.log('detectPose')
       const video = webcamRef.current?.video
       if (!video || video.readyState !== 4) return
 
       const startTimeMs = performance.now()
 
       try {
-        await poseLandmarker.setOptions({ runningMode: 'VIDEO' })
-        console.log('detecting pose', poseLandmarker)
         poseLandmarker.detectForVideo(video, startTimeMs, (result) => {
           const ctx = canvasRef.current?.getContext('2d')
           if (!ctx) return
