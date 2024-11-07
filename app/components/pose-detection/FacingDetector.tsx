@@ -1,12 +1,10 @@
 'use client'
 
 import { useRef, useState, useEffect, useCallback } from 'react'
-
-import * as tf from '@tensorflow/tfjs-core'
 import * as poseDetection from '@tensorflow-models/pose-detection'
 import Webcam from 'react-webcam'
 
-import '@tensorflow/tfjs-backend-webgl'
+import { useMN } from '@/app/contexts/mn-context'
 import { estimateOrientation } from '@/app/lib/orient'
 import { drawPose } from '@/app/lib/poseDrawing'
 
@@ -17,11 +15,9 @@ interface FacingFeedback {
 }
 
 export default function FacingDetector() {
+  const { detector, isLoading, error } = useMN()
   const webcamRef = useRef<Webcam>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const [detector, setDetector] = useState<poseDetection.PoseDetector | null>(
-    null
-  )
   const [fps, setFps] = useState<number>(0)
   const [feedback, setFeedback] = useState<FacingFeedback>({
     angle: 0,
@@ -31,22 +27,6 @@ export default function FacingDetector() {
 
   const frameCount = useRef<number>(0)
   const lastFpsUpdateTime = useRef<number>(performance.now())
-
-  useEffect(() => {
-    async function initDetector() {
-      await tf.ready()
-      await tf.setBackend('webgl')
-      const modelConfig = {
-        modelType: poseDetection.movenet.modelType.SINGLEPOSE_THUNDER,
-      }
-      const detector = await poseDetection.createDetector(
-        poseDetection.SupportedModels.MoveNet,
-        modelConfig
-      )
-      setDetector(detector)
-    }
-    initDetector()
-  }, [])
 
   const updateFacingFeedback = useCallback((pose: poseDetection.Pose) => {
     const { angle, direction, isValid } = estimateOrientation(pose)
@@ -79,23 +59,22 @@ export default function FacingDetector() {
   }, [])
 
   useEffect(() => {
-    if (!webcamRef.current) return
+    if (!webcamRef.current || isLoading || error || !detector) return
 
     let animationFrameId: number
 
     async function detectPose() {
-      if (!detector) return // Ensure detector is not null
-      if (webcamRef.current?.video?.readyState === 4) {
-        const poses = await detector.estimatePoses(webcamRef.current.video, {
-          flipHorizontal: false,
-        })
+      if (!detector || webcamRef.current?.video?.readyState !== 4) return
 
-        if (poses.length > 0) {
-          drawPoseCallback(poses[0])
-          updateFacingFeedback(poses[0])
-        }
-        updateFps()
+      const poses = await detector.estimatePoses(webcamRef.current.video, {
+        flipHorizontal: false,
+      })
+
+      if (poses.length > 0) {
+        drawPoseCallback(poses[0])
+        updateFacingFeedback(poses[0])
       }
+      updateFps()
       animationFrameId = requestAnimationFrame(detectPose)
     }
 
@@ -104,9 +83,14 @@ export default function FacingDetector() {
     return () => {
       if (animationFrameId) cancelAnimationFrame(animationFrameId)
     }
-  }, [detector, drawPoseCallback, updateFps, updateFacingFeedback])
+  }, [detector, isLoading, error, drawPoseCallback, updateFps, updateFacingFeedback])
+
+  if (isLoading) return <div>Loading pose detection model...</div>
+  if (error) return <div>Error loading pose detection model: {error.message}</div>
 
   return (
+    <div className="container mx-auto p-4">
+      <h1 className="text-2xl font-bold mb-4">正面检测</h1>
     <div className="flex flex-col gap-4">
       <div className="relative">
         <div
@@ -127,6 +111,6 @@ export default function FacingDetector() {
           <div className="text-sm">旋转角度: {Math.round(feedback.angle)}°</div>
         </div>
       </div>
-    </div>
+    </div>  </div>
   )
 }

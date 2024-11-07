@@ -1,14 +1,12 @@
-import dynamic from 'next/dynamic'
+'use client'
 
-const ExerciseView = dynamic(() => import('@/app/components/ExerciseView'), {
-  ssr: false,
-})
+import { MNProvider } from '@/app/contexts/mn-context'
+import { ExerciseView } from '@/app/components/pose-detection/ExerciseView'
 
 export default function Home() {
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8">Welcome to RehabMotion</h1>
+    <MNProvider>
       <ExerciseView />
-    </div>
+    </MNProvider>
   )
 }
