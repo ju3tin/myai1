@@ -22,6 +22,9 @@ export default function Header() {
           <Button variant="ghost" asChild>
             <Link href="/pose-detection-3d">3D Pose Detection</Link>
           </Button>
+          <Button variant="ghost" asChild>
+            <Link href="/mp-pose-detection">MediaPipe Pose</Link>
+          </Button>
         </nav>
       </div>
     </header>

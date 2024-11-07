@@ -27,6 +27,7 @@ export function draw3DPose(
   videoWidth: number,
   videoHeight: number
 ) {
+  console.log('draw3DPose', pose)
   // Clear canvas
   ctx.canvas.width = videoWidth
   ctx.canvas.height = videoHeight
