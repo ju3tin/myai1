@@ -57,7 +57,6 @@ export function MPPoseDetection() {
 
       try {
         poseLandmarker.detectForVideo(video, timestamp, (result) => {
-          console.log('result', result)
           ctx.save()
           ctx.clearRect(
             0,
