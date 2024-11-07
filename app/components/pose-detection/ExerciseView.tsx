@@ -109,81 +109,81 @@ export function ExerciseView() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-8">Welcome to RehabMotion</h1>
-    <div className="flex justify-center items-center min-h-screen p-4">
-      <div className="w-full max-w-6xl">
-        {isLoading && (
-          <div className="flex justify-center items-center h-full">
-            <p>Loading Models...</p>
-          </div>
-        )}
-        {error && (
-          <div className="flex justify-center items-center h-full">
-            <p className="text-red-500">Error: {error.message}</p>
-          </div>
-        )}
-        {!isLoading && !error && isBrowserReady ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="space-y-8">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Camera View</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="relative">
-                    <Webcam
-                      ref={webcamRef}
-                      className="w-full"
-                      audio={false}
-                      screenshotFormat="image/jpeg"
-                      videoConstraints={{
-                        facingMode: 'user',
-                      }}
-                      onUserMedia={() => {
-                        console.log('Camera access granted')
-                      }}
-                      onUserMediaError={(err) => {
-                        console.error('Camera error:', err)
-                      }}
-                    />
-                    <canvas
-                      ref={canvasRef}
-                      className="absolute top-0 left-0 w-full h-full"
-                    />
-                    <div className="absolute top-2 right-2 z-10 bg-black bg-opacity-50 text-white p-2 rounded">
-                      FPS: {fps}
-                    </div>
-                  </div>
-                  <Button onClick={captureScreenshot} className="mt-4">
-                    Capture Screenshot
-                  </Button>
-                </CardContent>
-              </Card>
-              {screenshot && (
+      <h1 className="text-3xl font-bold mb-8">Welcome to RehabMotion</h1>
+      <div className="flex justify-center items-center min-h-screen p-4">
+        <div className="w-full max-w-6xl">
+          {isLoading && (
+            <div className="flex justify-center items-center h-full">
+              <p>Loading Models...</p>
+            </div>
+          )}
+          {error && (
+            <div className="flex justify-center items-center h-full">
+              <p className="text-red-500">Error: {error.message}</p>
+            </div>
+          )}
+          {!isLoading && !error && isBrowserReady ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="space-y-8">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Captured Screenshot</CardTitle>
+                    <CardTitle>Camera View</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <Image
-                      src={screenshot}
-                      alt="Captured screenshot"
-                      width={640}
-                      height={480}
-                      className="w-full"
-                    />
+                    <div className="relative">
+                      <Webcam
+                        ref={webcamRef}
+                        className="w-full"
+                        audio={false}
+                        screenshotFormat="image/jpeg"
+                        videoConstraints={{
+                          facingMode: 'user',
+                        }}
+                        onUserMedia={() => {
+                          console.log('Camera access granted')
+                        }}
+                        onUserMediaError={(err) => {
+                          console.error('Camera error:', err)
+                        }}
+                      />
+                      <canvas
+                        ref={canvasRef}
+                        className="absolute top-0 left-0 w-full h-full"
+                      />
+                      <div className="absolute top-2 right-2 z-10 bg-black bg-opacity-50 text-white p-2 rounded">
+                        FPS: {fps}
+                      </div>
+                    </div>
+                    <Button onClick={captureScreenshot} className="mt-4">
+                      Capture Screenshot
+                    </Button>
                   </CardContent>
                 </Card>
-              )}
+                {screenshot && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Captured Screenshot</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <Image
+                        src={screenshot}
+                        alt="Captured screenshot"
+                        width={640}
+                        height={480}
+                        className="w-full"
+                      />
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+              <RealTimeResults poses={poses} />
             </div>
-            <RealTimeResults poses={poses} />
-          </div>
-        ) : (
-          <div className="flex justify-center items-center h-full">
-            <p>Loading...</p>
-          </div>
-        )}
-      </div>
+          ) : (
+            <div className="flex justify-center items-center h-full">
+              <p>Loading...</p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )
