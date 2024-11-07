@@ -22,7 +22,6 @@ export function MPPoseDetection() {
   const webcamRef = useRef<Webcam>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [isDetecting, setIsDetecting] = useState(false)
-  const frameCount = useRef(0)
   const [runningMode, setRunningMode] = useState<RunningMode>('VIDEO')
 
   useEffect(() => {
@@ -88,7 +87,6 @@ export function MPPoseDetection() {
           }
           ctx.restore()
         })
-
       } catch (err) {
         console.error('Error detecting pose:', err)
       }
