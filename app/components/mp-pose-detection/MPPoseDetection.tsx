@@ -25,12 +25,7 @@ export function MPPoseDetection() {
   const frameCount = useRef(0)
 
   useEffect(() => {
-    if (
-      !poseLandmarker ||
-      !webcamRef.current?.video ||
-      !isDetecting
-    )
-      return
+    if (!poseLandmarker || !webcamRef.current?.video || !isDetecting) return
 
     let animationFrame: number
 
