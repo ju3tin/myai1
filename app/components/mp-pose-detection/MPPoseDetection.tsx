@@ -55,10 +55,12 @@ export function MPPoseDetection() {
             drawingUtils.drawLandmarks(landmark, {
               radius: (data) =>
                 DrawingUtils.lerp(data.from!.z, -0.15, 0.1, 5, 1),
+              lineWidth: 1,
             })
             drawingUtils.drawConnectors(
               landmark,
-              PoseLandmarker.POSE_CONNECTIONS
+              PoseLandmarker.POSE_CONNECTIONS,
+              { lineWidth: 1 }
             )
           }
 
