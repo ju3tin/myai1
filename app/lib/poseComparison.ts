@@ -55,6 +55,38 @@ export function extractKeyAngles(landmarks: NormalizedLandmark[]): Angle[] {
         landmarks[28] // right ankle
       ),
     },
+    {
+      joint: 'leftShoulder',
+      angle: calculateAngle(
+        landmarks[13], // left elbow
+        landmarks[11], // left shoulder
+        landmarks[23] // left hip
+      ),
+    },
+    {
+      joint: 'rightShoulder',
+      angle: calculateAngle(
+        landmarks[14], // right elbow
+        landmarks[12], // right shoulder
+        landmarks[24] // right hip
+      ),
+    },
+    {
+      joint: 'leftHip',
+      angle: calculateAngle(
+        landmarks[11], // left shoulder
+        landmarks[23], // left hip
+        landmarks[25] // left knee
+      ),
+    },
+    {
+      joint: 'rightHip',
+      angle: calculateAngle(
+        landmarks[12], // right shoulder
+        landmarks[24], // right hip
+        landmarks[26] // right knee
+      ),
+    },
   ]
 }
 
