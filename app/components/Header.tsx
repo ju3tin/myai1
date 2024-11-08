@@ -1,11 +1,12 @@
 import Link from 'next/link'
+
+import { Button } from '@/app/components/ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger
+  DropdownMenuTrigger,
 } from '@/app/components/ui/dropdown-menu'
-import { Button } from '@/app/components/ui/button'
 
 export default function Header() {
   return (

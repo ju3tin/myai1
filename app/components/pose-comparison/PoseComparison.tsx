@@ -2,7 +2,11 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 
-import { DrawingUtils, NormalizedLandmark, PoseLandmarker } from '@mediapipe/tasks-vision'
+import {
+  DrawingUtils,
+  NormalizedLandmark,
+  PoseLandmarker,
+} from '@mediapipe/tasks-vision'
 
 import { Button } from '@/app/components/ui/button'
 import { useMPPoseDetector } from '@/app/contexts/MPPoseDetectorContext'
