@@ -1,5 +1,10 @@
 import Link from 'next/link'
-
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from '@/app/components/ui/dropdown-menu'
 import { Button } from '@/app/components/ui/button'
 
 export default function Header() {
@@ -9,24 +14,31 @@ export default function Header() {
         <Link href="/" className="text-2xl font-bold">
           RehabMotion
         </Link>
-        <nav>
+        <nav className="flex items-center space-x-2">
           <Button variant="ghost" asChild>
-            <Link href="/pose-tracking">Squat Detection</Link>
+            <Link href="/squat-detection">Squat Detection</Link>
           </Button>
           <Button variant="ghost" asChild>
             <Link href="/pose-detection">Pose Detection</Link>
           </Button>
-          <Button variant="ghost" asChild>
-            <Link href="/pose-comparison">Pose Comparison</Link>
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost">Pose Tools</Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem asChild>
+                <Link href="/pose-comparison">Pose Comparison</Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/mp-pose-detection">MediaPipe Pose</Link>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Button variant="ghost" asChild>
             <Link href="/facing-detection">Facing Detection</Link>
           </Button>
           <Button variant="ghost" asChild>
             <Link href="/pose-detection-3d">3D Pose Detection</Link>
-          </Button>
-          <Button variant="ghost" asChild>
-            <Link href="/mp-pose-detection">MediaPipe Pose</Link>
           </Button>
         </nav>
       </div>

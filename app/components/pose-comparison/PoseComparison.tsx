@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 
-import { DrawingUtils, NormalizedLandmark } from '@mediapipe/tasks-vision'
+import { DrawingUtils, NormalizedLandmark, PoseLandmarker } from '@mediapipe/tasks-vision'
 
 import { Button } from '@/app/components/ui/button'
 import { useMPPoseDetector } from '@/app/contexts/MPPoseDetectorContext'
@@ -38,7 +38,7 @@ export function PoseComparison() {
       await img.decode()
       if (imageNumber === 1) setImage1(imageUrl)
       else setImage2(imageUrl)
-
+      await poseLandmarker.setOptions({ runningMode: 'IMAGE' })
       const detections = await poseLandmarker.detect(img)
       const landmarks = detections.landmarks[0]
 
@@ -55,7 +55,7 @@ export function PoseComparison() {
 
       ctx.drawImage(img, 0, 0)
       const drawingUtils = new DrawingUtils(ctx)
-      drawingUtils.drawConnectors(landmarks, poseLandmarker.connectors, {
+      drawingUtils.drawConnectors(landmarks, PoseLandmarker.POSE_CONNECTIONS, {
         color: '#00FF00',
         lineWidth: 2,
       })
@@ -81,6 +81,12 @@ export function PoseComparison() {
 
   return (
     <div className="grid grid-cols-2 gap-8">
+      {similarity !== null && (
+        <div className="col-span-2 bg-blue-100 p-6 rounded-lg text-center">
+          <h2 className="text-2xl font-bold">Pose Similarity Score</h2>
+          <p className="text-4xl font-bold text-blue-600 mt-2">{similarity}%</p>
+        </div>
+      )}
       <div className="space-y-4">
         <Button asChild>
           <label>
@@ -124,13 +130,6 @@ export function PoseComparison() {
           </div>
         )}
       </div>
-
-      {similarity !== null && (
-        <div className="col-span-2 bg-blue-100 p-6 rounded-lg text-center">
-          <h2 className="text-2xl font-bold">Pose Similarity Score</h2>
-          <p className="text-4xl font-bold text-blue-600 mt-2">{similarity}%</p>
-        </div>
-      )}
     </div>
   )
 }
