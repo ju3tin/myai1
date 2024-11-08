@@ -10,6 +10,16 @@ function calculateAngle(
   point2: NormalizedLandmark,
   point3: NormalizedLandmark
 ): number {
+  // Check visibility of all points
+  const visibilityThreshold = 0.3
+  const isVisible =
+    point1.visibility > visibilityThreshold &&
+    point2.visibility > visibilityThreshold &&
+    point3.visibility > visibilityThreshold
+
+  // If any point is not sufficiently visible, return max angle (180)
+  if (!isVisible) return 180
+
   const radians =
     Math.atan2(point3.y - point2.y, point3.x - point2.x) -
     Math.atan2(point1.y - point2.y, point1.x - point2.x)
