@@ -5,12 +5,17 @@ import { useRef, useState, useEffect, useCallback } from 'react'
 import * as poseDetection from '@tensorflow-models/pose-detection'
 import Webcam from 'react-webcam'
 
-import { useMN } from '@/app/contexts/mn-context'
-import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card'
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@/app/components/ui/card'
 import { Checkbox } from '@/app/components/ui/checkbox'
 import { Label } from '@/app/components/ui/label'
 import { Slider } from '@/app/components/ui/slider'
 import { Switch } from '@/app/components/ui/switch'
+import { useMN } from '@/app/contexts/mn-context'
 import { useToast } from '@/app/hooks/use-toast'
 import { drawPose } from '@/app/lib/poseDrawing'
 import {

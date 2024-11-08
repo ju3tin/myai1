@@ -1,7 +1,7 @@
 'use client'
 
-import { MNProvider } from '@/app/contexts/mn-context'
 import { PoseDetectionView } from '@/app/components/pose-detection/PoseDetectionView'
+import { MNProvider } from '@/app/contexts/mn-context'
 
 export default function PoseDetectionPage() {
   return (

@@ -14,6 +14,7 @@ import {
   TabsList,
   TabsTrigger,
 } from '@/app/components/ui/tabs'
+import { useMN } from '@/app/contexts/mn-context'
 import { drawPose as dp } from '@/app/lib/poseDrawing'
 import {
   countValidSquats,
@@ -22,7 +23,6 @@ import {
   SquatLog,
   Feedback,
 } from '@/app/lib/squatDetection'
-import { useMN } from '@/app/contexts/mn-context'
 
 const STANDARD_POSES = [
   { id: 1, src: '/poses/squat-1.jpg', label: '深蹲姿势 1' },
