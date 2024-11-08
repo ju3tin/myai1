@@ -16,15 +16,9 @@ export default function Header() {
           RehabMotion
         </Link>
         <nav className="flex items-center space-x-2">
-          <Button variant="ghost" asChild>
-            <Link href="/squat-detection">Squat Detection</Link>
-          </Button>
-          <Button variant="ghost" asChild>
-            <Link href="/pose-detection">Pose Detection</Link>
-          </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost">Pose Tools</Button>
+              <Button variant="ghost">Mediapipe+BlazePose</Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
               <DropdownMenuItem asChild>
@@ -35,12 +29,32 @@ export default function Header() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <Button variant="ghost" asChild>
-            <Link href="/facing-detection">Facing Detection</Link>
-          </Button>
-          <Button variant="ghost" asChild>
-            <Link href="/pose-detection-3d">3D Pose Detection</Link>
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost">TFJS+MoveNet</Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem asChild>
+                <Link href="/squat-detection">Squat Detection</Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/pose-detection">Pose Detection</Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/facing-detection">Facing Detection</Link>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost">TFJS+BlazePose</Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem asChild>
+                <Link href="/pose-detection-3d">3D Pose Detection</Link>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </nav>
       </div>
     </header>

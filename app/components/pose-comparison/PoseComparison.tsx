@@ -39,35 +39,65 @@ export function PoseComparison() {
       const img = new Image()
       img.src = imageUrl
 
-      await img.decode()
-      if (imageNumber === 1) setImage1(imageUrl)
-      else setImage2(imageUrl)
-      await poseLandmarker.setOptions({ runningMode: 'IMAGE' })
-      const detections = await poseLandmarker.detect(img)
-      const landmarks = detections.landmarks[0]
+      img.onload = async () => {
+        if (imageNumber === 1) setImage1(imageUrl)
+        else setImage2(imageUrl)
 
-      if (imageNumber === 1) setLandmarks1(landmarks)
-      else setLandmarks2(landmarks)
+        await poseLandmarker.setOptions({ runningMode: 'IMAGE' })
+        const detections = await poseLandmarker.detect(img)
+        const landmarks = detections.landmarks[0]
+        console.log(landmarks)
+        if (!landmarks) {
+          console.warn('No landmarks detected')
+          return
+        }
 
-      const canvas = imageNumber === 1 ? canvasRef1.current : canvasRef2.current
-      if (!canvas) return
+        if (imageNumber === 1) setLandmarks1(landmarks)
+        else setLandmarks2(landmarks)
 
-      canvas.width = img.width
-      canvas.height = img.height
-      const ctx = canvas.getContext('2d')
-      if (!ctx) return
+        const canvas =
+          imageNumber === 1 ? canvasRef1.current : canvasRef2.current
+        if (!canvas) {
+          console.warn('No canvas found')
+          return
+        }
 
-      ctx.drawImage(img, 0, 0)
-      const drawingUtils = new DrawingUtils(ctx)
-      drawingUtils.drawConnectors(landmarks, PoseLandmarker.POSE_CONNECTIONS, {
-        color: '#00FF00',
-        lineWidth: 2,
-      })
-      drawingUtils.drawLandmarks(landmarks, {
-        color: '#FF0000',
-        lineWidth: 1,
-        radius: 3,
-      })
+        canvas.width = img.width
+        canvas.height = img.height
+        console.log(canvas.width, canvas.height)
+        const ctx = canvas.getContext('2d')
+        if (!ctx) return
+
+        // Clear previous drawing
+        ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+        // Draw the original image
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+
+        // Create drawing utils
+        const drawingUtils = new DrawingUtils(ctx)
+
+        // Draw pose connections (skeleton lines)
+        drawingUtils.drawConnectors(
+          landmarks,
+          PoseLandmarker.POSE_CONNECTIONS,
+          {
+            color: 'rgba(0, 255, 0, 0.7)', // Semi-transparent green
+            lineWidth: 3,
+          }
+        )
+
+        // Draw landmarks (joints)
+        drawingUtils.drawLandmarks(landmarks, {
+          color: 'rgba(255, 0, 0, 0.7)', // Semi-transparent red
+          lineWidth: 2,
+          radius: 5,
+        })
+      }
+
+      img.onerror = (error) => {
+        console.error('Error loading image:', error)
+      }
     },
     [poseLandmarker]
   )
@@ -103,14 +133,15 @@ export function PoseComparison() {
             />
           </label>
         </Button>
-        {image1 && (
-          <div className="space-y-4">
-            <canvas ref={canvasRef1} className="w-full" />
+
+        <div className="space-y-4">
+          <canvas ref={canvasRef1} className="w-full" />
+          {image1 && (
             <pre className="text-sm bg-gray-100 p-4 rounded">
               {JSON.stringify(landmarks1, null, 2)}
             </pre>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       <div className="space-y-4">
@@ -125,14 +156,15 @@ export function PoseComparison() {
             />
           </label>
         </Button>
-        {image2 && (
-          <div className="space-y-4">
-            <canvas ref={canvasRef2} className="w-full" />
+
+        <div className="space-y-4">
+          <canvas ref={canvasRef2} className="w-full" />
+          {image2 && (
             <pre className="text-sm bg-gray-100 p-4 rounded">
               {JSON.stringify(landmarks2, null, 2)}
             </pre>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   )
