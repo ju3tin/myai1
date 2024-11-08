@@ -2,12 +2,9 @@
 
 import { useRef, useState, useEffect, useCallback } from 'react'
 
-import * as tf from '@tensorflow/tfjs-core'
 import * as poseDetection from '@tensorflow-models/pose-detection'
 import Image from 'next/image'
 import Webcam from 'react-webcam'
-
-import '@tensorflow/tfjs-backend-webgl'
 
 import { Button } from '@/app/components/ui/button'
 import { Slider } from '@/app/components/ui/slider'
@@ -25,6 +22,7 @@ import {
   SquatLog,
   Feedback,
 } from '@/app/lib/squatDetection'
+import { useMN } from '@/app/contexts/mn-context'
 
 const STANDARD_POSES = [
   { id: 1, src: '/poses/squat-1.jpg', label: '深蹲姿势 1' },
@@ -33,11 +31,9 @@ const STANDARD_POSES = [
 ]
 
 export default function SquatDetector() {
+  const { detector, isLoading, error } = useMN()
   const webcamRef = useRef<Webcam>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const [detector, setDetector] = useState<poseDetection.PoseDetector | null>(
-    null
-  )
   const [fps, setFps] = useState<number>(0)
   const [squatCount, setSquatCount] = useState<number>(0)
   const [feedback, setFeedback] = useState<Feedback>({
@@ -56,7 +52,6 @@ export default function SquatDetector() {
   const [poseKeypoints, setPoseKeypoints] = useState<poseDetection.Pose | null>(
     null
   )
-  const [isLoading, setIsLoading] = useState(true) // 添加 loading 状态
   const standardImageRef = useRef<HTMLImageElement>(null)
   const standardCanvasRef = useRef<HTMLCanvasElement>(null)
 
@@ -96,29 +91,6 @@ export default function SquatDetector() {
     },
     [captureScreenshot]
   )
-
-  useEffect(() => {
-    async function initDetector() {
-      setIsLoading(true) // 开始加载
-      try {
-        await tf.ready()
-        await tf.setBackend('webgl')
-        const modelConfig = {
-          modelType: poseDetection.movenet.modelType.SINGLEPOSE_THUNDER,
-        }
-        const detector = await poseDetection.createDetector(
-          poseDetection.SupportedModels.MoveNet,
-          modelConfig
-        )
-        setDetector(detector)
-      } catch (error) {
-        console.error('Failed to initialize detector:', error)
-      } finally {
-        setIsLoading(false) // 结束加载
-      }
-    }
-    initDetector()
-  }, [])
 
   const drawPose = useCallback((pose: poseDetection.Pose) => {
     const ctx = canvasRef.current?.getContext('2d')
@@ -218,6 +190,14 @@ export default function SquatDetector() {
       <div className="flex flex-col items-center justify-center min-h-[400px]">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900"></div>
         <p className="mt-4 text-gray-600">正在加载姿势检测模型...</p>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] text-red-500">
+        <p>模型加载失败: {error.message}</p>
       </div>
     )
   }

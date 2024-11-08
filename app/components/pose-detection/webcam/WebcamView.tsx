@@ -1,18 +1,12 @@
 'use client'
 
-import { useRef, useState, useEffect, useCallback, RefObject } from 'react'
+import { useRef, useState, useEffect, useCallback } from 'react'
 
-import * as tf from '@tensorflow/tfjs-core'
 import * as poseDetection from '@tensorflow-models/pose-detection'
 import Webcam from 'react-webcam'
 
-import '@tensorflow/tfjs-backend-webgl'
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/app/components/ui/card'
+import { useMN } from '@/app/contexts/mn-context'
+import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card'
 import { Checkbox } from '@/app/components/ui/checkbox'
 import { Label } from '@/app/components/ui/label'
 import { Slider } from '@/app/components/ui/slider'
@@ -27,8 +21,8 @@ import {
 import { PoseLogEntry } from '../types'
 
 interface WebcamViewProps {
-  targetImageRef: RefObject<HTMLImageElement>
-  targetCanvasRef: RefObject<HTMLCanvasElement>
+  targetImageRef: React.RefObject<HTMLImageElement>
+  targetCanvasRef: React.RefObject<HTMLCanvasElement>
   onSimilarityUpdate: (similarity: number) => void
   onLogEntry: (entry: PoseLogEntry) => void
 }
@@ -40,14 +34,12 @@ export function WebcamView({
   onLogEntry,
 }: WebcamViewProps) {
   const { toast } = useToast()
+  const { detector, isLoading: isModelLoading, error: modelError } = useMN()
 
   const webcamRef = useRef<Webcam>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [detector, setDetector] = useState<poseDetection.PoseDetector | null>(
-    null
-  )
   const [fps, setFps] = useState<number>(0)
   const frameCount = useRef<number>(0)
   const lastFpsUpdateTime = useRef<number>(0)
@@ -70,13 +62,12 @@ export function WebcamView({
     [SimilarityStrategy.RELATIVE_ANGLES]: 1,
     [SimilarityStrategy.INVARIANT_FEATURES]: 0,
   })
-  const [isModelLoading, setIsModelLoading] = useState(true)
 
   const [smoothedSimilarity, setSmoothedSimilarity] = useState<number>(0)
   const similarityBuffer = useRef<number[]>([])
-  const BUFFER_SIZE = 5 // 平滑窗口大小
-  const SIMILARITY_THRESHOLD = 0.001 // 最小变化阈值
-  const FRAME_INTERVAL = 3 // 每隔几帧计算一次
+  const BUFFER_SIZE = 5
+  const SIMILARITY_THRESHOLD = 0.001
+  const FRAME_INTERVAL = 3
   const frameCounter = useRef(0)
 
   // 平滑函数
@@ -150,28 +141,15 @@ export function WebcamView({
   }, [])
 
   useEffect(() => {
-    async function initDetector() {
-      setIsModelLoading(true) // 开始加载
-      try {
-        await tf.ready()
-        await tf.setBackend('webgl')
-        const modelConfig = {
-          modelType: poseDetection.movenet.modelType.SINGLEPOSE_THUNDER,
-        }
-        const detector = await poseDetection.createDetector(
-          poseDetection.SupportedModels.MoveNet,
-          modelConfig
-        )
-        setDetector(detector)
-      } catch (error) {
-        console.error('Error initializing detector:', error)
-        setError('Failed to initialize pose detector')
-      } finally {
-        setIsModelLoading(false) // 结束加载
-      }
+    if (modelError) {
+      setError(modelError.message)
+      toast({
+        title: 'Model Initialization Error',
+        description: modelError.message,
+        variant: 'destructive',
+      })
     }
-    initDetector()
-  }, [])
+  }, [modelError, toast])
 
   const logPoseIfNeeded = useCallback(
     async (pose: poseDetection.Pose, similarity: number) => {
@@ -337,7 +315,7 @@ export function WebcamView({
 
   return (
     <Card className="flex flex-col">
-      {isModelLoading && (
+      {(isModelLoading || isLoading) && (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white p-4 rounded-lg shadow-lg text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-2"></div>
