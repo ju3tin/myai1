@@ -1,4 +1,4 @@
-import { NormalizedLandmark } from '@mediapipe/tasks-vision'
+import { Landmark, NormalizedLandmark } from '@mediapipe/tasks-vision'
 
 interface Angle {
   joint: string
@@ -6,9 +6,9 @@ interface Angle {
 }
 
 function calculateAngle(
-  point1: NormalizedLandmark,
-  point2: NormalizedLandmark,
-  point3: NormalizedLandmark
+  point1: NormalizedLandmark | Landmark,
+  point2: NormalizedLandmark | Landmark,
+  point3: NormalizedLandmark | Landmark
 ): number {
   // Check visibility of all points
   const visibilityThreshold = 0.3

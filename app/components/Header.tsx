@@ -35,7 +35,7 @@ export default function Header() {
             </DropdownMenuTrigger>
             <DropdownMenuContent>
               <DropdownMenuItem asChild>
-                <Link href="/squat-detection">Squat Detection</Link>
+                <Link href="/pose-tracking">Squat Tracking</Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link href="/pose-detection">Pose Detection</Link>

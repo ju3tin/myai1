@@ -15,14 +15,54 @@ import {
   extractKeyAngles,
 } from '@/app/lib/poseComparison'
 
+interface NamedLandmark extends NormalizedLandmark {
+  name: string
+}
+
+const LANDMARK_NAMES: { [key: number]: string } = {
+  0: 'nose',
+  1: 'left eye (inner)',
+  2: 'left eye',
+  3: 'left eye (outer)',
+  4: 'right eye (inner)',
+  5: 'right eye',
+  6: 'right eye (outer)',
+  7: 'left ear',
+  8: 'right ear',
+  9: 'mouth (left)',
+  10: 'mouth (right)',
+  11: 'left shoulder',
+  12: 'right shoulder',
+  13: 'left elbow',
+  14: 'right elbow',
+  15: 'left wrist',
+  16: 'right wrist',
+  17: 'left pinky',
+  18: 'right pinky',
+  19: 'left index',
+  20: 'right index',
+  21: 'left thumb',
+  22: 'right thumb',
+  23: 'left hip',
+  24: 'right hip',
+  25: 'left knee',
+  26: 'right knee',
+  27: 'left ankle',
+  28: 'right ankle',
+  29: 'left heel',
+  30: 'right heel',
+  31: 'left foot index',
+  32: 'right foot index'
+}
+
 export function PoseComparison() {
   const { poseLandmarker, isLoading } = useMPPoseDetector()
   const [image1, setImage1] = useState<string | null>(null)
   const [image2, setImage2] = useState<string | null>(null)
-  const [landmarks1, setLandmarks1] = useState<NormalizedLandmark[] | null>(
+  const [landmarks1, setLandmarks1] = useState<NamedLandmark[] | null>(
     null
   )
-  const [landmarks2, setLandmarks2] = useState<NormalizedLandmark[] | null>(
+  const [landmarks2, setLandmarks2] = useState<NamedLandmark[] | null>(
     null
   )
   const [similarity, setSimilarity] = useState<number | null>(null)
@@ -45,15 +85,20 @@ export function PoseComparison() {
 
         await poseLandmarker.setOptions({ runningMode: 'IMAGE' })
         const detections = await poseLandmarker.detect(img)
-        const landmarks = detections.landmarks[0]
+        const landmarks = detections.worldLandmarks[0]
         console.log(landmarks)
         if (!landmarks) {
           console.warn('No landmarks detected')
           return
         }
 
-        if (imageNumber === 1) setLandmarks1(landmarks)
-        else setLandmarks2(landmarks)
+        const landmarksWithNames = landmarks.map((landmark, index) => ({
+          ...landmark,
+          name: LANDMARK_NAMES[index] || `unknown-${index}`
+        }))
+
+        if (imageNumber === 1) setLandmarks1(landmarksWithNames)
+        else setLandmarks2(landmarksWithNames)
 
         const canvas =
           imageNumber === 1 ? canvasRef1.current : canvasRef2.current
@@ -79,7 +124,7 @@ export function PoseComparison() {
 
         // Draw pose connections (skeleton lines)
         drawingUtils.drawConnectors(
-          landmarks,
+          detections.landmarks[0],
           PoseLandmarker.POSE_CONNECTIONS,
           {
             color: 'rgba(0, 255, 0, 0.7)', // Semi-transparent green
@@ -88,7 +133,7 @@ export function PoseComparison() {
         )
 
         // Draw landmarks (joints)
-        drawingUtils.drawLandmarks(landmarks, {
+        drawingUtils.drawLandmarks(detections.landmarks[0], {
           color: 'rgba(255, 0, 0, 0.7)', // Semi-transparent red
           lineWidth: 2,
           radius: 5,
