@@ -52,19 +52,15 @@ const LANDMARK_NAMES: { [key: number]: string } = {
   29: 'left heel',
   30: 'right heel',
   31: 'left foot index',
-  32: 'right foot index'
+  32: 'right foot index',
 }
 
 export function PoseComparison() {
   const { poseLandmarker, isLoading } = useMPPoseDetector()
   const [image1, setImage1] = useState<string | null>(null)
   const [image2, setImage2] = useState<string | null>(null)
-  const [landmarks1, setLandmarks1] = useState<NamedLandmark[] | null>(
-    null
-  )
-  const [landmarks2, setLandmarks2] = useState<NamedLandmark[] | null>(
-    null
-  )
+  const [landmarks1, setLandmarks1] = useState<NamedLandmark[] | null>(null)
+  const [landmarks2, setLandmarks2] = useState<NamedLandmark[] | null>(null)
   const [similarity, setSimilarity] = useState<number | null>(null)
 
   const canvasRef1 = useRef<HTMLCanvasElement>(null)
@@ -94,7 +90,7 @@ export function PoseComparison() {
 
         const landmarksWithNames = landmarks.map((landmark, index) => ({
           ...landmark,
-          name: LANDMARK_NAMES[index] || `unknown-${index}`
+          name: LANDMARK_NAMES[index] || `unknown-${index}`,
         }))
 
         if (imageNumber === 1) setLandmarks1(landmarksWithNames)
