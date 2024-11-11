@@ -10,12 +10,24 @@ function calculateAngle(
   point2: NormalizedLandmark | Landmark,
   point3: NormalizedLandmark | Landmark
 ): number {
+  // Adjust visibility based on z-coordinate
+  const adjustVisibility = (point: NormalizedLandmark | Landmark) => {
+    if ('z' in point) {
+      return point.z > 0 ? 0 : 1
+    }
+    return 0
+  }
+
+  const visibility1 = adjustVisibility(point1)
+  const visibility2 = adjustVisibility(point2)
+  const visibility3 = adjustVisibility(point3)
+
   // Check visibility of all points
   const visibilityThreshold = 0.3
   const isVisible =
-    point1.visibility > visibilityThreshold &&
-    point2.visibility > visibilityThreshold &&
-    point3.visibility > visibilityThreshold
+    visibility1 > visibilityThreshold &&
+    visibility2 > visibilityThreshold &&
+    visibility3 > visibilityThreshold
 
   // If any point is not sufficiently visible, return max angle (180)
   if (!isVisible) return 180
