@@ -5,13 +5,14 @@ export function drawPose(
   poses: Pose[],
   videoWidth: number,
   videoHeight: number,
-  skipEarNoseEye: boolean = true
+  skipEarNoseEye: boolean = true,
+  clearCanvas: boolean = true
 ) {
   if (poses.length === 0) return
 
   ctx.canvas.width = videoWidth
   ctx.canvas.height = videoHeight
-  ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
+  if (clearCanvas) ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
 
   poses[0].keypoints.forEach((keypoint) => {
     if (

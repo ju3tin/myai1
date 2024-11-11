@@ -43,6 +43,9 @@ export default function Header() {
               <DropdownMenuItem asChild>
                 <Link href="/facing-detection">Facing Detection</Link>
               </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/mn-pose-comparison">MoveNet Pose Comparison</Link>
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
           <DropdownMenu>
