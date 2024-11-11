@@ -60,7 +60,6 @@ export function MNPoseComparison() {
 
         canvas.width = img.width
         canvas.height = img.height
-        console.log(canvas.width, canvas.height)
         const ctx = canvas.getContext('2d')
         if (!ctx) return
         drawPose(ctx, detections, img.width, img.height, true)
@@ -78,8 +77,21 @@ export function MNPoseComparison() {
       setSimilarity(
         calculateCombinedSimilarity(pose1, pose2, {
           strategies: [
-            { strategy: SimilarityStrategy.KEY_ANGLES, weight: 0 },
-            { strategy: SimilarityStrategy.RELATIVE_ANGLES, weight: 1 },
+            {
+              strategy: SimilarityStrategy.KEY_ANGLES,
+              weight: 1,
+              selectedAngles: [
+                'leftElbowAngle',
+                'leftShoulderAngle',
+                'leftHipAngle',
+                'leftKneeAngle',
+                'rightElbowAngle',
+                'rightShoulderAngle',
+                'rightHipAngle',
+                'rightKneeAngle',
+              ], // 根据需要选择关键角度
+            },
+            { strategy: SimilarityStrategy.RELATIVE_ANGLES, weight: 0 },
             { strategy: SimilarityStrategy.INVARIANT_FEATURES, weight: 0 },
           ],
         })

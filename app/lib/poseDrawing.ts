@@ -31,7 +31,6 @@ export function drawPose(
 
       ctx.font = '12px Arial'
       const text = keypoint.name ?? 'unnamed'
-      console.log('Drawing text:', text, 'at', keypoint.x, keypoint.y)
 
       ctx.fillStyle = 'black'
       ctx.fillRect(

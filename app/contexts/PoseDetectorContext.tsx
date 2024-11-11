@@ -4,7 +4,7 @@ import { createContext, useContext, useEffect, useState, useRef } from 'react'
 
 import * as tf from '@tensorflow/tfjs-core'
 import * as poseDetection from '@tensorflow-models/pose-detection'
-import '@tensorflow/tfjs-backend-webgl'
+import '@tensorflow/tfjs-backend-webgpu'
 import '@mediapipe/pose'
 
 interface PoseDetectorContextType {
@@ -38,7 +38,7 @@ export function PoseDetectorProvider({
 
       try {
         await tf.ready()
-        await tf.setBackend('webgl')
+        await tf.setBackend('webgpu')
 
         const model = poseDetection.SupportedModels.BlazePose
         const detectorConfig: poseDetection.BlazePoseMediaPipeModelConfig = {
@@ -52,11 +52,13 @@ export function PoseDetectorProvider({
           model,
           detectorConfig
         )
+        console.log('detector', detector)
         setDetector(detector)
       } catch (err) {
         console.error('Failed to initialize pose detector:', err)
         setError('Failed to initialize pose detector')
       } finally {
+        console.log('pose detector initialized')
         setIsLoading(false)
       }
     }
