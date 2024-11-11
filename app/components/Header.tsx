@@ -56,6 +56,11 @@ export default function Header() {
               <DropdownMenuItem asChild>
                 <Link href="/pose-detection-3d">3D Pose Detection</Link>
               </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/tm-pose-comparison">
+                  TFJS BlazePose Pose Comparison
+                </Link>
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </nav>
