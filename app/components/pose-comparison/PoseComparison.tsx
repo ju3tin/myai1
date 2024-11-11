@@ -82,7 +82,7 @@ export function PoseComparison() {
         await poseLandmarker.setOptions({ runningMode: 'IMAGE' })
         const detections = await poseLandmarker.detect(img)
         const landmarks = detections.worldLandmarks[0]
-        console.log(landmarks)
+        console.log(detections)
         if (!landmarks) {
           console.warn('No landmarks detected')
           return
@@ -105,7 +105,6 @@ export function PoseComparison() {
 
         canvas.width = img.width
         canvas.height = img.height
-        console.log(canvas.width, canvas.height)
         const ctx = canvas.getContext('2d')
         if (!ctx) return
 

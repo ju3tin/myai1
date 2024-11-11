@@ -44,6 +44,9 @@ export function MPPoseDetectorProvider({ children }: { children: ReactNode }) {
           },
           runningMode: RUNNING_MODE,
           numPoses: 1,
+          minPoseDetectionConfidence: 0.5,
+          minPosePresenceConfidence: 0.5,
+          minTrackingConfidence: 0.5,
         })
 
         setPoseLandmarker(landmarker)
