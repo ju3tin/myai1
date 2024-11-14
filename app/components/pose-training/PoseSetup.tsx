@@ -40,35 +40,34 @@ export function PoseSetup({
 
   const addPoseCheck = useCallback(
     (type: PoseCheckConfig['type']) => {
-      setPoseChecks((prev) => [
-        ...prev,
-        {
-          id: crypto.randomUUID(),
-          type,
-          ...(type === 'angle'
+      const newCheck: PoseCheckConfig = {
+        id: crypto.randomUUID(),
+        type,
+        ...(type === 'angle'
+          ? {
+              joints: ['', '', ''],
+              comparison: 'equal' as const,
+              targetValue: 0,
+            }
+          : type === 'height'
             ? {
-                joints: ['', '', ''],
-                comparison: 'equal' as const,
-                targetValue: 0,
+                points: ['', ''],
+                tolerance: 0,
               }
-            : type === 'height'
+            : type === 'duration'
               ? {
-                  points: ['', ''],
-                  tolerance: 0,
+                  durationRange: { min: 0, max: 0 },
                 }
-              : type === 'duration'
+              : type === 'count'
                 ? {
-                    durationRange: { min: 0, max: 0 },
+                    countRange: { min: 0, max: 0 },
                   }
-                : type === 'count'
-                  ? {
-                      countRange: { min: 0, max: 0 },
-                    }
-                  : {}),
-        } as PoseCheckConfig,
-      ])
+                : {}),
+      } as PoseCheckConfig
+
+      setPoseChecks([...poseChecks, newCheck])
     },
-    [setPoseChecks]
+    [setPoseChecks, poseChecks]
   )
 
   return (
@@ -111,12 +110,14 @@ export function PoseSetup({
               key={check.id}
               check={check}
               onUpdate={(updated) => {
-                setPoseChecks((prev) =>
-                  prev.map((c) => (c.id === check.id ? updated : c))
+                const newChecks = poseChecks.map((c) =>
+                  c.id === check.id ? updated : c
                 )
+                setPoseChecks(newChecks)
               }}
               onDelete={() => {
-                setPoseChecks((prev) => prev.filter((c) => c.id !== check.id))
+                const newChecks = poseChecks.filter((c) => c.id !== check.id)
+                setPoseChecks(newChecks)
               }}
               poseLandmarker={poseLandmarker}
               standardImage={standardImage}

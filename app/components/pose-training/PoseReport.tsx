@@ -32,6 +32,13 @@ export function PoseReport({ practiceResults, poseChecks }: PoseReportProps) {
 
         switch (check.type) {
           case 'angle': {
+            if (check.targetValue === undefined) {
+              achievement = 0
+              status = 'error'
+              message = 'No target value specified'
+              break
+            }
+
             const diff = Math.abs(result.value - check.targetValue)
             const tolerance = check.tolerance || 5
             achievement = Math.max(
