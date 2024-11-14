@@ -60,11 +60,12 @@ export function PosePractice({
 
         // Check if angle meets criteria
         const isPassing =
-          check.comparison === 'greater'
+          check.targetValue !== undefined &&
+          (check.comparison === 'greater'
             ? angle > check.targetValue
             : check.comparison === 'less'
               ? angle < check.targetValue
-              : Math.abs(angle - check.targetValue) <= (check.tolerance || 5)
+              : Math.abs(angle - check.targetValue) <= (check.tolerance || 5))
 
         // Update duration
         if (isPassing) {
