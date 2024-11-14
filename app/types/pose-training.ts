@@ -1,20 +1,14 @@
 export interface PoseCheckConfig {
   id: string
   type: 'angle' | 'height' | 'duration' | 'count'
-  joints?: [string, string, string] // For angle checks
-  points?: [string, string] // For height checks
+  targetValue?: number
+  joints?: string[]
+  points?: string[]
   comparison?: 'greater' | 'less' | 'equal'
-  targetValue: number
+  standardValue?: number
   tolerance?: number
-  standardValue?: number // Calculated from standard pose
-  durationRange?: {
-    min: number
-    max: number
-  }
-  countRange?: {
-    min: number
-    max: number
-  }
+  durationRange?: { min: number; max: number }
+  countRange?: { min: number; max: number }
 }
 
 export interface PracticeResult {

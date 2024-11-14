@@ -39,7 +39,7 @@ export function PoseCheckCard({
     const img = new Image()
     img.src = standardImage
     await img.decode()
-
+    await poseLandmarker.setOptions({ runningMode: 'IMAGE' })
     const result = await poseLandmarker.detect(img)
     if (!result.landmarks?.[0]) return
 

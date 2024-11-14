@@ -45,8 +45,27 @@ export function PoseSetup({
         {
           id: crypto.randomUUID(),
           type,
-          targetValue: 0,
-        },
+          ...(type === 'angle'
+            ? {
+                joints: ['', '', ''],
+                comparison: 'equal' as const,
+                targetValue: 0,
+              }
+            : type === 'height'
+              ? {
+                  points: ['', ''],
+                  tolerance: 0,
+                }
+              : type === 'duration'
+                ? {
+                    durationRange: { min: 0, max: 0 },
+                  }
+                : type === 'count'
+                  ? {
+                      countRange: { min: 0, max: 0 },
+                    }
+                  : {}),
+        } as PoseCheckConfig,
       ])
     },
     [setPoseChecks]
@@ -57,13 +76,18 @@ export function PoseSetup({
       <section className="space-y-4">
         <h2 className="text-xl font-semibold">Standard Pose</h2>
         <div className="flex items-center space-x-4">
-          <Input type="file" accept="image/*" onChange={handleImageUpload} />
+          <Input
+            type="file"
+            accept="image/*"
+            onChange={handleImageUpload}
+            className="w-48"
+          />
           {standardImage && (
-            <div className="relative w-64 h-64">
+            <div className="relative w-128 h-128">
               <img
                 src={standardImage}
                 alt="Standard pose"
-                className="object-contain w-full h-full"
+                className="object-contain w-full h-full rounded-lg shadow-md"
               />
             </div>
           )}
