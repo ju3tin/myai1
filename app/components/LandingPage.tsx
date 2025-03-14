@@ -50,7 +50,7 @@ export function LandingPage() {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="border-white text-white hover:bg-white/10"
+                  className="bg-white text-purple-900 hover:bg-gray-100"
                 >
                   <Link
                     href="/pose-comparison"
