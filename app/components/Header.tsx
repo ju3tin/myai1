@@ -1,4 +1,5 @@
 import { Activity, Zap, Brain, Menu } from 'lucide-react'
+import Image from 'next/image'
 import Link from 'next/link'
 
 import { Button } from '@/app/components/ui/button'
@@ -18,7 +19,13 @@ export default function Header() {
           className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent flex items-center gap-2"
         >
           <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center">
-            <Activity className="h-5 w-5 text-white" />
+            {/* use favicon.svg */}
+            <Image
+              src="/favicon.svg"
+              alt="PoseDetector.com"
+              width={32}
+              height={32}
+            />
           </div>
           PoseDetector.com
         </Link>
