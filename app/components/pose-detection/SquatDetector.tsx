@@ -25,9 +25,9 @@ import {
 } from '@/app/lib/squatDetection'
 
 const STANDARD_POSES = [
-  { id: 1, src: '/poses/squat-1.jpg', label: '深蹲姿势 1' },
-  { id: 2, src: '/poses/squat-2.jpg', label: '深蹲姿势 2' },
-  { id: 3, src: '/poses/squat-3.jpg', label: '深蹲姿势 3' },
+  { id: 1, src: '/poses/squat-1.jpg', label: 'squat 1' },
+  { id: 2, src: '/poses/squat-2.jpg', label: 'squat 2' },
+  { id: 3, src: '/poses/squat-3.jpg', label: 'squat 3' },
 ]
 
 export default function SquatDetector() {

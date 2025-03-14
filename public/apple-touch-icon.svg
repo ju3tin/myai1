@@ -1,0 +1,35 @@
+<svg width="180" height="180" viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg">
+  <!-- 背景 -->
+  <rect width="180" height="180" rx="40" fill="#0f172a"/>
+  
+  <!-- 渐变背景效果 -->
+  <defs>
+    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#8b5cf6" stop-opacity="0.3"/>
+    </linearGradient>
+  </defs>
+  <rect width="180" height="180" rx="40" fill="url(#grad1)"/>
+  
+  <!-- 人体姿势轮廓 -->
+  <g transform="translate(90, 90) scale(0.8)" fill="none" stroke="#60a5fa" stroke-width="6" stroke-linecap="round">
+    <!-- 简化的人体姿势轮廓 -->
+    <circle cx="0" cy="-50" r="20"/> <!-- 头部 -->
+    <line x1="0" y1="-30" x2="0" y2="30"/> <!-- 躯干 -->
+    <line x1="0" y1="-10" x2="-40" y2="10"/> <!-- 左臂 -->
+    <line x1="0" y1="-10" x2="40" y2="10"/> <!-- 右臂 -->
+    <line x1="0" y1="30" x2="-30" y2="70"/> <!-- 左腿 -->
+    <line x1="0" y1="30" x2="30" y2="70"/> <!-- 右腿 -->
+    
+    <!-- 关节点 -->
+    <circle cx="0" cy="-10" r="3"/> <!-- 肩部 -->
+    <circle cx="-40" cy="10" r="3"/> <!-- 左手 -->
+    <circle cx="40" cy="10" r="3"/> <!-- 右手 -->
+    <circle cx="0" cy="30" r="3"/> <!-- 臀部 -->
+    <circle cx="-30" cy="70" r="3"/> <!-- 左脚 -->
+    <circle cx="30" cy="70" r="3"/> <!-- 右脚 -->
+  </g>
+  
+  <!-- 字母 P -->
+  <text x="50" y="130" font-family="Arial, sans-serif" font-size="40" font-weight="bold" fill="#ffffff">PD</text>
+</svg> 

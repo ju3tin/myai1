@@ -1,0 +1,71 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg">
+  <!-- 背景 -->
+  <rect width="1200" height="630" fill="#0f172a"/>
+  
+  <!-- 渐变背景效果 -->
+  <defs>
+    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#8b5cf6" stop-opacity="0.2"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#grad1)"/>
+  
+  <!-- 装饰元素：人体姿势轮廓 -->
+  <g transform="translate(900, 315) scale(0.8)" fill="none" stroke="#60a5fa" stroke-width="4" opacity="0.7">
+    <!-- 简化的人体姿势轮廓 -->
+    <circle cx="0" cy="-150" r="30"/> <!-- 头部 -->
+    <line x1="0" y1="-120" x2="0" y2="0"/> <!-- 躯干 -->
+    <line x1="0" y1="-100" x2="-70" y2="-50"/> <!-- 左臂上部 -->
+    <line x1="-70" y1="-50" x2="-100" y2="0"/> <!-- 左臂下部 -->
+    <line x1="0" y1="-100" x2="70" y2="-50"/> <!-- 右臂上部 -->
+    <line x1="70" y1="-50" x2="100" y2="0"/> <!-- 右臂下部 -->
+    <line x1="0" y1="0" x2="-50" y2="100"/> <!-- 左腿上部 -->
+    <line x1="-50" y1="100" x2="-30" y2="200"/> <!-- 左腿下部 -->
+    <line x1="0" y1="0" x2="50" y2="100"/> <!-- 右腿上部 -->
+    <line x1="50" y1="100" x2="30" y2="200"/> <!-- 右腿下部 -->
+    
+    <!-- 关节点 -->
+    <circle cx="0" cy="-100" r="5"/> <!-- 肩部 -->
+    <circle cx="-70" cy="-50" r="5"/> <!-- 左肘 -->
+    <circle cx="70" cy="-50" r="5"/> <!-- 右肘 -->
+    <circle cx="-100" cy="0" r="5"/> <!-- 左手 -->
+    <circle cx="100" cy="0" r="5"/> <!-- 右手 -->
+    <circle cx="0" cy="0" r="5"/> <!-- 臀部 -->
+    <circle cx="-50" cy="100" r="5"/> <!-- 左膝 -->
+    <circle cx="50" cy="100" r="5"/> <!-- 右膝 -->
+    <circle cx="-30" cy="200" r="5"/> <!-- 左脚 -->
+    <circle cx="30" cy="200" r="5"/> <!-- 右脚 -->
+  </g>
+  
+  <!-- 动态效果：连接线 -->
+  <g stroke="#4ade80" stroke-width="2" opacity="0.5">
+    <line x1="200" y1="200" x2="300" y2="250" stroke-dasharray="5,5"/>
+    <line x1="300" y1="250" x2="400" y2="200" stroke-dasharray="5,5"/>
+    <line x1="400" y1="200" x2="500" y2="250" stroke-dasharray="5,5"/>
+    <line x1="500" y1="250" x2="600" y2="200" stroke-dasharray="5,5"/>
+  </g>
+  
+  <!-- 标题 -->
+  <text x="150" y="250" font-family="Arial, sans-serif" font-size="72" font-weight="bold" fill="#ffffff">
+    PoseDetector
+  </text>
+  
+  <!-- 副标题 -->
+  <text x="150" y="320" font-family="Arial, sans-serif" font-size="36" fill="#e2e8f0">
+    Advanced AI Pose Detection
+  </text>
+  
+  <!-- 描述 -->
+  <text x="150" y="380" font-family="Arial, sans-serif" font-size="24" fill="#94a3b8">
+    Cutting-edge AI-powered pose detection for fitness,
+  </text>
+  <text x="150" y="415" font-family="Arial, sans-serif" font-size="24" fill="#94a3b8">
+    dance, healthcare, and rehabilitation
+  </text>
+  
+  <!-- 网址 -->
+  <text x="150" y="480" font-family="Arial, sans-serif" font-size="28" fill="#60a5fa">
+    posedetector.com
+  </text>
+</svg> 
