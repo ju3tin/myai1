@@ -1,0 +1,11 @@
+<svg width="800" height="600" viewBox="0 0 800 600" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="600" fill="#6D28D9" />
+  <path d="M400 150 C 400 150, 450 200, 450 250 C 450 300, 400 350, 400 350" stroke="white" stroke-width="8" stroke-linecap="round" />
+  <path d="M400 150 C 400 150, 350 200, 350 250 C 350 300, 400 350, 400 350" stroke="white" stroke-width="8" stroke-linecap="round" />
+  <circle cx="400" cy="120" r="40" fill="white" />
+  <path d="M400 350 L 400 450" stroke="white" stroke-width="8" stroke-linecap="round" />
+  <path d="M400 450 L 350 550" stroke="white" stroke-width="8" stroke-linecap="round" />
+  <path d="M400 450 L 450 550" stroke="white" stroke-width="8" stroke-linecap="round" />
+  <text x="400" y="50" font-family="Arial" font-size="24" fill="white" text-anchor="middle">Pose Detection Illustration</text>
+  <text x="400" y="580" font-family="Arial" font-size="18" fill="white" text-anchor="middle">PoseDetector.com</text>
+</svg> 

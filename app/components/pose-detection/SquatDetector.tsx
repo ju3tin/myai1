@@ -189,7 +189,7 @@ export default function SquatDetector() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px]">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900"></div>
-        <p className="mt-4 text-gray-600">正在加载姿势检测模型...</p>
+        <p className="mt-4 text-gray-600">Loading Model...</p>
       </div>
     )
   }
@@ -197,7 +197,7 @@ export default function SquatDetector() {
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] text-red-500">
-        <p>模型加载失败: {error.message}</p>
+        <p>Model loading failed: {error.message}</p>
       </div>
     )
   }
@@ -220,9 +220,11 @@ export default function SquatDetector() {
       <div className="flex flex-col gap-2 p-4 bg-gray-50 rounded-lg">
         <div className="flex items-center justify-between">
           <label className="text-sm font-medium">
-            姿势相似度阈值: {similarityThreshold.toFixed(2)}
+            Pose Similarity Threshold: {similarityThreshold.toFixed(2)}
           </label>
-          <span className="text-xs text-gray-500">值越高要求越严格</span>
+          <span className="text-xs text-gray-500">
+            The higher the value, the stricter the requirement
+          </span>
         </div>
         <Slider
           defaultValue={[0.85]}
@@ -242,8 +244,8 @@ export default function SquatDetector() {
           onValueChange={(value) => setActiveTab(value)}
         >
           <TabsList>
-            <TabsTrigger value="standardPose">标准姿势</TabsTrigger>
-            <TabsTrigger value="webcam">摄像头</TabsTrigger>
+            <TabsTrigger value="standardPose">Standard Pose</TabsTrigger>
+            <TabsTrigger value="webcam">Webcam</TabsTrigger>
           </TabsList>
           <TabsContent value="standardPose">
             <div className="flex flex-col items-center">
@@ -294,7 +296,7 @@ export default function SquatDetector() {
       )}
 
       <div className="bg-gray-100 p-4 rounded-lg">
-        <h2 className="text-lg font-semibold mb-4">深蹲记录</h2>
+        <h2 className="text-lg font-semibold mb-4">Squat Record</h2>
         <div className="flex flex-col gap-4">
           <div className="grid grid-cols-3 gap-4">
             {squatLogs.slice(0, 3).map((log) => (
@@ -306,14 +308,13 @@ export default function SquatDetector() {
               >
                 <Image
                   src={log.imageData}
-                  alt={`${SquatPhase[log.phase]} - 第1组`}
+                  alt={`${SquatPhase[log.phase]} - Group 1`}
                   width={500}
                   height={300}
                   className="w-full h-auto rounded"
                 />
                 <span className="mt-2 text-sm">
-                  {SquatPhase[log.phase]} - 第1组
-                  {log.isValid && ' ✓'}
+                  {SquatPhase[log.phase]} - Group 1{log.isValid && ' ✓'}
                 </span>
               </div>
             ))}
@@ -333,13 +334,13 @@ export default function SquatDetector() {
                     >
                       <Image
                         src={log.imageData}
-                        alt={`${SquatPhase[log.phase]} - 第${rowIndex + 2}组`}
+                        alt={`${SquatPhase[log.phase]} - Group ${rowIndex + 2}`}
                         width={500}
                         height={300}
                         className="w-full h-auto rounded"
                       />
                       <span className="mt-2 text-sm">
-                        {SquatPhase[log.phase]} - 第{rowIndex + 2}组
+                        {SquatPhase[log.phase]} - Group {rowIndex + 2}
                         {log.isValid && ' ✓'}
                       </span>
                     </div>

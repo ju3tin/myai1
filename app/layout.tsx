@@ -9,11 +9,9 @@ import { Layout } from './components/Layout'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'RehabMotion',
-  description: 'AI-powered rehabilitation exercises',
-  icons: {
-    icon: '/favicon.svg',
-  },
+  title: 'PoseDetector.com - Advanced AI Pose Detection',
+  description:
+    'Cutting-edge AI-powered pose detection for fitness, dance, healthcare, and rehabilitation',
 }
 
 export default function RootLayout({
@@ -23,9 +21,6 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <head>
-        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-      </head>
       <body className={inter.className}>
         <Layout>{children}</Layout>
         <Toaster />
