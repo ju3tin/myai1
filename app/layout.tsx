@@ -21,7 +21,7 @@ export const metadata: Metadata = {
   publisher: 'PoseDetector.com',
   metadataBase: new URL('https://posedetector.com'),
   alternates: {
-    canonical: '/',
+    canonical: 'https://www.posedetector.com',
   },
   robots: {
     index: true,
@@ -38,13 +38,13 @@ export const metadata: Metadata = {
     title: 'PoseDetector.com - Advanced AI Pose Detection',
     description:
       'Cutting-edge AI-powered pose detection for fitness, dance, healthcare, and rehabilitation',
-    url: 'https://posedetector.com',
+    url: 'https://www.posedetector.com',
     siteName: 'PoseDetector',
     locale: 'en_US',
     type: 'website',
     images: [
       {
-        url: 'https://posedetector.com/og-image.png',
+        url: 'https://www.posedetector.com/og-image.png',
         width: 1200,
         height: 630,
         alt: 'PoseDetector.com - Advanced AI Pose Detection',
@@ -56,7 +56,7 @@ export const metadata: Metadata = {
     title: 'PoseDetector.com - Advanced AI Pose Detection',
     description:
       'Cutting-edge AI-powered pose detection for fitness, dance, healthcare, and rehabilitation',
-    images: ['https://posedetector.com/og-image.png'],
+    images: ['https://www.posedetector.com/og-image.png'],
     creator: '@posedetector',
   },
   verification: {
