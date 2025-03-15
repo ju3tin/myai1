@@ -1,4 +1,4 @@
-import { Activity, Zap, Brain, Menu } from 'lucide-react'
+import { Activity, Zap, Brain, Menu, Github } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 
@@ -181,6 +181,23 @@ export default function Header() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+
+          {/* GitHub Source Code Link */}
+          <Button
+            variant="ghost"
+            className="flex items-center gap-2 rounded-full px-4 hover:bg-gray-50 hover:text-gray-700"
+            asChild
+          >
+            <a
+              href="https://github.com/sing1ee/my-pose"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2"
+            >
+              <Github className="h-4 w-4" />
+              <span>Source Code</span>
+            </a>
+          </Button>
         </nav>
 
         {/* Mobile Menu */}
@@ -236,6 +253,24 @@ export default function Header() {
                   </div>
                   <span>3D Pose Detection</span>
                 </Link>
+              </DropdownMenuItem>
+
+              {/* GitHub Source Code Link in Mobile Menu */}
+              <DropdownMenuItem
+                asChild
+                className="rounded-lg cursor-pointer hover:bg-gray-50"
+              >
+                <a
+                  href="https://github.com/sing1ee/my-pose"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 py-2"
+                >
+                  <div className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center">
+                    <Github className="h-4 w-4 text-gray-600" />
+                  </div>
+                  <span>Source Code</span>
+                </a>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
