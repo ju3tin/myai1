@@ -6,282 +6,49 @@
     <title>TensorFlow.js Pose Detection</title>
     <style>
         body {
-    font-family: Arial, sans-serif;
-    margin: 20px;
-    text-align: center;
-}
-.container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-#video, #canvas {
-    margin-top: 10px;
-    border: 1px solid #ccc;
-}
-#status {
-    margin-top: 20px;
-    padding: 10px;
-    background-color: #f0f0f0;
-    border-radius: 5px;
-}
-button {
-    margin: 10px;
-    padding: 8px 16px;
-    background-color: #4285f4;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-}
-button:hover {
-    background-color: #3367d6;
-}
-select {
-    margin: 10px;
-    padding: 8px;
-}
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            text-align: center;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        #video, #canvas {
+            margin-top: 10px;
+            border: 1px solid #ccc;
+        }
+        #status {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f0f0f0;
+            border-radius: 5px;
+        }
+        button {
+            margin: 10px;
+            padding: 8px 16px;
+            background-color: #4285f4;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #3367d6;
+        }
+        select {
+            margin: 10px;
+            padding: 8px;
+        }
     </style>
-<!-- TensorFlow.js Core -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/tensorflow/4.2.0/tf.min.js"></script>
-
-<!-- TensorFlow.js Models (TFJS Pose Detection) -->
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/pose-detection@2.0.0"></script>
-<script>
-let detector;
-let model = 'movenet';
-let video;
-let canvas;
-let ctx;
-let isRunning = false;
-let rafId;
-
-// DOM elements
-const statusDiv = document.getElementById('status');
-const startBtn = document.getElementById('startBtn');
-const stopBtn = document.getElementById('stopBtn');
-const modelSelect = document.getElementById('modelSelect');
-
-  // Initialize the application
-async function init() {
-    statusDiv.textContent = 'Loading TensorFlow.js...';
-
-    // Make sure TF.js is loaded
-    await tf.ready();
-
-    // Setup canvas
-    canvas = document.getElementById('canvas');
-    ctx = canvas.getContext('2d');
-
-    // Get camera element
-    video = document.getElementById('video');
-
-    // Setup event listeners
-    startBtn.addEventListener('click', startCamera);
-    stopBtn.addEventListener('click', stopCamera);
-    modelSelect.addEventListener('change', changeModel);
-
-    // Load the initial model
-    await loadModel();
-
-    statusDiv.textContent = 'Model loaded. Click "Start Camera" to begin.';
-}
-
-  // Load the selected pose detection model
-async function loadModel() {
-    if (detector) {
-        detector.dispose();
-    }
-
-    statusDiv.textContent = `Loading ${model} model...`;
-
-    try {
-        let modelConfig;
-
-        if (model === 'movenet') {
-            modelConfig = {
-                modelType: poseDetection.movenet.modelType.SINGLEPOSE_LIGHTNING
-            };
-        } else if (model === 'blazepose') {
-            modelConfig = {
-                runtime: 'tfjs',
-                modelType: 'full'
-            };
-        } else if (model === 'posenet') {
-            modelConfig = {
-                architecture: 'MobileNetV1',
-                outputStride: 16,
-                inputResolution: { width: 640, height: 480 },
-                multiplier: 0.75
-            };
-        }
-
-        detector = await poseDetection.createDetector(
-            model === 'movenet'
-                ? poseDetection.SupportedModels.MoveNet
-                : model === 'blazepose'
-                    ? poseDetection.SupportedModels.BlazePose
-                    : poseDetection.SupportedModels.PoseNet,
-            modelConfig
-        );
-
-        statusDiv.textContent = `${model} model loaded!`;
-    } catch (error) {
-        statusDiv.textContent = `Error loading model: ${error.message}`;
-        console.error(error);
-    }
-}
-// Start the camera and pose detection
-async function startCamera() {
-    try {
-        const constraints = {
-            video: {
-                width: 640,
-                height: 480
-            }
-        };
-
-        const stream = await navigator.mediaDevices.getUserMedia(constraints);
-        video.srcObject = stream;
-
-        video.onloadedmetadata = () => {
-            video.play();
-            video.style.display = 'none';
-            startBtn.disabled = true;
-            stopBtn.disabled = false;
-            modelSelect.disabled = true;
-            isRunning = true;
-            statusDiv.textContent = 'Camera started. Detecting poses...';
-            detectPose();
-        };
-    } catch (error) {
-        statusDiv.textContent = `Error accessing camera: ${error.message}`;
-        console.error(error);
-    }
-}
-
-  // Stop the camera and pose detection
-function stopCamera() {
-    if (video.srcObject) {
-        video.srcObject.getTracks().forEach(track => track.stop());
-        video.srcObject = null;
-    }
-
-    if (rafId) {
-        cancelAnimationFrame(rafId);
-        rafId = null;
-    }
-
-    startBtn.disabled = false;
-    stopBtn.disabled = true;
-    modelSelect.disabled = false;
-    isRunning = false;
-    statusDiv.textContent = 'Camera stopped.';
-
-    // Clear the canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-}
-
-  // Change the pose detection model
-async function changeModel() {
-    model = modelSelect.value;
-    await loadModel();
-    statusDiv.textContent = `${model} model loaded. Click "Start Camera" to begin.`;
-}
-
-  // Continuously detect poses
-async function detectPose() {
-    if (!isRunning) return;
-
-    if (video.readyState === 4) {
-        // Draw the video frame
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-        // Detect poses
-        try {
-            const poses = await detector.estimatePoses(video);
-
-            // Draw the poses
-            drawPoses(poses);
-
-            statusDiv.textContent = `Detecting poses using ${model}...`;
-        } catch (error) {
-            console.error('Error detecting poses:', error);
-        }
-    }
-
-    // Continue detection loop
-    rafId = requestAnimationFrame(detectPose);
-}
-// Draw detected poses on the canvas
-function drawPoses(poses) {
-    // For each detected pose
-    for (const pose of poses) {
-        // Draw keypoints
-        for (const keypoint of pose.keypoints) {
-            if (keypoint.score > 0.3) {
-                ctx.beginPath();
-                ctx.arc(keypoint.x, keypoint.y, 5, 0, 2 * Math.PI);
-                ctx.fillStyle = 'red';
-                ctx.fill();
-
-                // Optionally draw keypoint name
-                ctx.fillStyle = 'white';
-                ctx.fillText(keypoint.name, keypoint.x + 10, keypoint.y + 5);
-            }
-        }
-
-        // Draw skeleton (if available)
-        if (pose.keypoints.length > 5) { // Basic check to ensure we have enough keypoints
-            drawSkeleton(pose);
-        }
-    }
-}
-  // Draw the skeleton connecting keypoints
-function drawSkeleton(pose) {
-    // Define connections for a human skeleton
-    const connections = [
-        ['nose', 'left_eye'], ['nose', 'right_eye'],
-        ['left_eye', 'left_ear'], ['right_eye', 'right_ear'],
-        ['nose', 'left_shoulder'], ['nose', 'right_shoulder'],
-        ['left_shoulder', 'left_elbow'], ['right_shoulder', 'right_elbow'],
-        ['left_elbow', 'left_wrist'], ['right_elbow', 'right_wrist'],
-        ['left_shoulder', 'right_shoulder'],
-        ['left_shoulder', 'left_hip'], ['right_shoulder', 'right_hip'],
-        ['left_hip', 'right_hip'],
-        ['left_hip', 'left_knee'], ['right_hip', 'right_knee'],
-        ['left_knee', 'left_ankle'], ['right_knee', 'right_ankle']
-    ];
-
-    // Create a map for fast keypoint lookup
-    const keypointMap = {};
-    pose.keypoints.forEach(keypoint => {
-        keypointMap[keypoint.name] = keypoint;
-    });
-
-    // Draw connections
-    ctx.strokeStyle = 'green';
-    ctx.lineWidth = 4;
-
-    for (const [p1Name, p2Name] of connections) {
-        const p1 = keypointMap[p1Name];
-        const p2 = keypointMap[p2Name];
-
-        if (p1 && p2 && p1.score > 0.3 && p2.score > 0.3) {
-            ctx.beginPath();
-            ctx.moveTo(p1.x, p1.y);
-            ctx.lineTo(p2.x, p2.y);
-            ctx.stroke();
-        }
-    }
-}
-
-
-  
-</script>
+    <!-- TensorFlow.js Core -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0/dist/tf.min.js"></script>
+    <!-- TensorFlow.js Models (TFJS Pose Detection) -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/pose-detection@2.0.0/dist/pose-detection.min.js"></script>
 </head>
 <body>
-   <h1>TensorFlow.js Pose Detection</h1>
+    <h1>TensorFlow.js Pose Detection</h1>
     <div class="container">
         <div>
             <select id="modelSelect">
@@ -296,5 +63,279 @@ function drawSkeleton(pose) {
         <canvas id="canvas" width="640" height="480"></canvas>
         <div id="status">Loading models...</div>
     </div>
+    <script>
+        let detector;
+        let model = 'movenet';
+        let video;
+        let canvas;
+        let ctx;
+        let isRunning = false;
+        let rafId;
+
+        // DOM elements
+        const statusDiv = document.getElementById('status');
+        const startBtn = document.getElementById('startBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const modelSelect = document.getElementById('modelSelect');
+
+        // Initialize the application
+        async function init() {
+            statusDiv.textContent = 'Loading TensorFlow.js...';
+
+            // Check if poseDetection is available
+            if (!window.poseDetection) {
+                statusDiv.textContent = 'Error: Pose Detection library not loaded.';
+                return;
+            }
+
+            // Make sure TF.js is loaded
+            await tf.ready();
+
+            // Setup canvas
+            canvas = document.getElementById('canvas');
+            ctx = canvas.getContext('2d');
+
+            // Get camera element
+            video = document.getElementById('video');
+
+            // Setup event listeners
+            startBtn.addEventListener('click', startCamera);
+            stopBtn.addEventListener('click', stopCamera);
+            modelSelect.addEventListener('change', changeModel);
+
+            // Load the initial model
+            await loadModel();
+
+            statusDiv.textContent = 'Model loaded. Click "Start Camera" to begin.';
+        }
+
+        // Load the selected pose detection model
+        async function loadModel() {
+            if (detector) {
+                detector.dispose();
+                detector = null;
+            }
+
+            statusDiv.textContent = `Loading ${model} model...`;
+
+            try {
+                let modelConfig;
+
+                if (model === 'movenet') {
+                    modelConfig = {
+                        modelType: poseDetection.movenet.modelType.SINGLEPOSE_LIGHTNING
+                    };
+                } else if (model === 'blazepose') {
+                    modelConfig = {
+                        runtime: 'tfjs',
+                        modelType: 'full'
+                    };
+                } else if (model === 'posenet') {
+                    modelConfig = {
+                        architecture: 'MobileNetV1',
+                        outputStride: 16,
+                        inputResolution: { width: 640, height: 480 },
+                        multiplier: 0.75
+                    };
+                }
+
+                detector = await poseDetection.createDetector(
+                    model === 'movenet'
+                        ? poseDetection.SupportedModels.MoveNet
+                        : model === 'blazepose'
+                            ? poseDetection.SupportedModels.BlazePose
+                            : poseDetection.SupportedModels.PoseNet,
+                    modelConfig
+                );
+
+                statusDiv.textContent = `${model} model loaded!`;
+            } catch (error) {
+                statusDiv.textContent = `Error loading model: ${error.message}`;
+                console.error(error);
+            }
+        }
+
+        // Start the camera and pose detection
+        async function startCamera() {
+            // Check if camera API is supported
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                statusDiv.textContent = 'Error: Camera access not supported in this browser.';
+                return;
+            }
+
+            try {
+                const constraints = {
+                    video: {
+                        width: 640,
+                        height: 480
+                    }
+                };
+
+                const stream = await navigator.mediaDevices.getUserMedia(constraints);
+                video.srcObject = stream;
+
+                video.onloadedmetadata = () => {
+                    video.play();
+                    video.style.display = 'none';
+                    startBtn.disabled = true;
+                    stopBtn.disabled = false;
+                    modelSelect.disabled = true;
+                    isRunning = true;
+                    statusDiv.textContent = 'Camera started. Detecting poses...';
+                    detectPose();
+                };
+            } catch (error) {
+                statusDiv.textContent = `Error accessing camera: ${error.message}`;
+                console.error(error);
+            }
+        }
+
+        // Stop the camera and pose detection
+        function stopCamera() {
+            if (video.srcObject) {
+                video.srcObject.getTracks().forEach(track => track.stop());
+                video.srcObject = null;
+            }
+
+            if (rafId) {
+                cancelAnimationFrame(rafId);
+                rafId = null;
+            }
+
+            startBtn.disabled = false;
+            stopBtn.disabled = true;
+            modelSelect.disabled = false;
+            isRunning = false;
+            statusDiv.textContent = 'Camera stopped.';
+
+            // Clear the canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+        // Change the pose detection model
+        async function changeModel() {
+            model = modelSelect.value;
+            await loadModel();
+            statusDiv.textContent = `${model} model loaded. Click "Start Camera" to begin.`;
+        }
+
+        // Continuously detect poses
+        async function detectPose() {
+            if (!isRunning || !detector || video.readyState !== 4) {
+                rafId = requestAnimationFrame(detectPose);
+                return;
+            }
+
+            // Draw the video frame
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            // Detect poses
+            try {
+                const poses = await detector.estimatePoses(video);
+                statusDiv.textContent = `Detecting poses using ${model}... (${poses.length} poses detected)`;
+
+                // Draw the poses
+                drawPoses(poses);
+            } catch (error) {
+                console.error('Error detecting poses:', error);
+                statusDiv.textContent = `Error detecting poses: ${error.message}`;
+            }
+
+            // Continue detection loop
+            rafId = requestAnimationFrame(detectPose);
+        }
+
+        // Draw detected poses on the canvas
+        function drawPoses(poses) {
+            // Clear previous drawings
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            // For each detected pose
+            for (const pose of poses) {
+                // Draw keypoints
+                for (const keypoint of pose.keypoints) {
+                    if (keypoint.score > 0.3) {
+                        ctx.beginPath();
+                        ctx.arc(keypoint.x, keypoint.y, 5, 0, 2 * Math.PI);
+                        ctx.fillStyle = 'red';
+                        ctx.fill();
+
+                        // Draw keypoint name
+                        ctx.fillStyle = 'white';
+                        ctx.font = '12px Arial';
+                        ctx.fillText(keypoint.name || keypoint.part || 'point', keypoint.x + 10, keypoint.y + 5);
+                    }
+                }
+
+                // Draw skeleton (if available)
+                if (pose.keypoints.length > 5) {
+                    drawSkeleton(pose);
+                }
+            }
+        }
+
+        // Draw the skeleton connecting keypoints
+        function drawSkeleton(pose) {
+            // Define connections for a human skeleton (adjusted for model compatibility)
+            const connections = model === 'posenet' ? [
+                ['nose', 'leftEye'], ['nose', 'rightEye'],
+                ['leftEye', 'leftEar'], ['rightEye', 'rightEar'],
+                ['nose', 'leftShoulder'], ['nose', 'rightShoulder'],
+                ['leftShoulder', 'leftElbow'], ['rightShoulder', 'rightElbow'],
+                ['leftElbow', 'leftWrist'], ['rightElbow', 'rightWrist'],
+                ['leftShoulder', 'rightShoulder'],
+                ['leftShoulder', 'leftHip'], ['rightShoulder', 'rightHip'],
+                ['leftHip', 'rightHip'],
+                ['leftHip', 'leftKnee'], ['rightHip', 'rightKnee'],
+                ['leftKnee', 'leftAnkle'], ['rightKnee', 'rightAnkle']
+            ] : model === 'movenet' ? [
+                ['nose', 'left_eye'], ['nose', 'right_eye'],
+                ['left_eye', 'left_ear'], ['right_eye', 'right_ear'],
+                ['left_shoulder', 'right_shoulder'],
+                ['left_shoulder', 'left_elbow'], ['right_shoulder', 'right_elbow'],
+                ['left_elbow', 'left_wrist'], ['right_elbow', 'right_wrist'],
+                ['left_shoulder', 'left_hip'], ['right_shoulder', 'right_hip'],
+                ['left_hip', 'right_hip'],
+                ['left_hip', 'left_knee'], ['right_hip', 'right_knee'],
+                ['left_knee', 'left_ankle'], ['right_knee', 'right_ankle']
+            ] : [
+                // BlazePose has more keypoints; simplified connections
+                ['nose', 'left_eye_inner'], ['nose', 'right_eye_inner'],
+                ['left_shoulder', 'right_shoulder'],
+                ['left_shoulder', 'left_elbow'], ['right_shoulder', 'right_elbow'],
+                ['left_elbow', 'left_wrist'], ['right_elbow', 'right_wrist'],
+                ['left_shoulder', 'left_hip'], ['right_shoulder', 'right_hip'],
+                ['left_hip', 'right_hip'],
+                ['left_hip', 'left_knee'], ['right_hip', 'right_knee'],
+                ['left_knee', 'left_ankle'], ['right_knee', 'right_ankle']
+            ];
+
+            // Create a map for fast keypoint lookup
+            const keypointMap = {};
+            pose.keypoints.forEach(keypoint => {
+                keypointMap[keypoint.name || keypoint.part] = keypoint;
+            });
+
+            // Draw connections
+            ctx.strokeStyle = 'green';
+            ctx.lineWidth = 4;
+
+            for (const [p1Name, p2Name] of connections) {
+                const p1 = keypointMap[p1Name];
+                const p2 = keypointMap[p2Name];
+
+                if (p1 && p2 && p1.score > 0.3 && p2.score > 0.3) {
+                    ctx.beginPath();
+                    ctx.moveTo(p1.x, p1.y);
+                    ctx.lineTo(p2.x, p2.y);
+                    ctx.stroke();
+                }
+            }
+        }
+
+        // Start the application
+        init();
+    </script>
 </body>
 </html>
