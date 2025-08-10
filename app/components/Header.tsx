@@ -27,7 +27,7 @@ export default function Header() {
               height={32}
             />
           </div>
-          PoseDetector.com
+          Pill Fitness
         </Link>
         <nav className="hidden md:flex items-center space-x-1">
           <DropdownMenu>
