@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TensorFlow.js Pose Detection</title>
+    <title>PoseNet Exercise Detector</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -25,6 +25,11 @@
             background-color: #f0f0f0;
             border-radius: 5px;
         }
+        #counter {
+            margin-top: 10px;
+            font-size: 24px;
+            font-weight: bold;
+        }
         button {
             margin: 10px;
             padding: 8px 16px;
@@ -44,17 +49,18 @@
     </style>
     <!-- TensorFlow.js Core -->
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0/dist/tf.min.js"></script>
-    <!-- TensorFlow.js Models (TFJS Pose Detection) -->
+    <!-- TensorFlow.js Models (PoseNet) -->
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/pose-detection@2.0.0/dist/pose-detection.min.js"></script>
 </head>
 <body>
-    <h1>TensorFlow.js Pose Detection</h1>
+    <h1>PoseNet Exercise Detector</h1>
     <div class="container">
         <div>
-            <select id="modelSelect">
-                <option value="movenet">MoveNet</option>
-                <option value="blazepose">BlazePose</option>
-                <option value="posenet">PoseNet</option>
+            <select id="exerciseSelect">
+                <option value="pushups">Push-ups</option>
+                <option value="situps">Sit-ups</option>
+                <option value="starjumps">Star Jumps</option>
+                <option value="squats">Squats</option>
             </select>
             <button id="startBtn">Start Camera</button>
             <button id="stopBtn" disabled>Stop Camera</button>
@@ -62,93 +68,72 @@
         <video id="video" width="640" height="480" autoplay style="display: none;"></video>
         <canvas id="canvas" width="640" height="480"></canvas>
         <div id="status">Loading models...</div>
+        <div id="counter">Reps: 0</div>
     </div>
     <script>
         let detector;
-        let model = 'movenet';
         let video;
         let canvas;
         let ctx;
         let isRunning = false;
         let rafId;
+        let exercise = 'pushups';
+        let repCount = 0;
+        let prevState = null;
+        let lastPose = null;
 
         // DOM elements
         const statusDiv = document.getElementById('status');
+        const counterDiv = document.getElementById('counter');
         const startBtn = document.getElementById('startBtn');
         const stopBtn = document.getElementById('stopBtn');
-        const modelSelect = document.getElementById('modelSelect');
+        const exerciseSelect = document.getElementById('exerciseSelect');
 
         // Initialize the application
         async function init() {
             statusDiv.textContent = 'Loading TensorFlow.js...';
 
-            // Check if poseDetection is available
             if (!window.poseDetection) {
                 statusDiv.textContent = 'Error: Pose Detection library not loaded.';
                 return;
             }
 
-            // Make sure TF.js is loaded
             await tf.ready();
 
-            // Setup canvas
             canvas = document.getElementById('canvas');
             ctx = canvas.getContext('2d');
-
-            // Get camera element
             video = document.getElementById('video');
 
-            // Setup event listeners
             startBtn.addEventListener('click', startCamera);
             stopBtn.addEventListener('click', stopCamera);
-            modelSelect.addEventListener('change', changeModel);
+            exerciseSelect.addEventListener('change', changeExercise);
 
-            // Load the initial model
             await loadModel();
 
-            statusDiv.textContent = 'Model loaded. Click "Start Camera" to begin.';
+            statusDiv.textContent = 'Model loaded. Select an exercise and click "Start Camera" to begin.';
         }
 
-        // Load the selected pose detection model
+        // Load PoseNet model
         async function loadModel() {
             if (detector) {
                 detector.dispose();
                 detector = null;
             }
 
-            statusDiv.textContent = `Loading ${model} model...`;
+            statusDiv.textContent = 'Loading PoseNet model...';
 
             try {
-                let modelConfig;
-
-                if (model === 'movenet') {
-                    modelConfig = {
-                        modelType: poseDetection.movenet.modelType.SINGLEPOSE_LIGHTNING
-                    };
-                } else if (model === 'blazepose') {
-                    modelConfig = {
-                        runtime: 'tfjs',
-                        modelType: 'full'
-                    };
-                } else if (model === 'posenet') {
-                    modelConfig = {
-                        architecture: 'MobileNetV1',
-                        outputStride: 16,
-                        inputResolution: { width: 640, height: 480 },
-                        multiplier: 0.75
-                    };
-                }
-
+                const modelConfig = {
+                    architecture: 'MobileNetV1',
+                    outputStride: 16,
+                    inputResolution: { width: 640, height: 480 },
+                    multiplier: 0.75
+                };
                 detector = await poseDetection.createDetector(
-                    model === 'movenet'
-                        ? poseDetection.SupportedModels.MoveNet
-                        : model === 'blazepose'
-                            ? poseDetection.SupportedModels.BlazePose
-                            : poseDetection.SupportedModels.PoseNet,
+                    poseDetection.SupportedModels.PoseNet,
                     modelConfig
                 );
-
-                statusDiv.textContent = `${model} model loaded!`;
+                statusDiv.textContent = 'PoseNet model loaded!';
             } catch (error) {
                 statusDiv.textContent = `Error loading model: ${error.message}`;
                 console.error(error);
@@ -157,7 +142,6 @@
 
         // Start the camera and pose detection
         async function startCamera() {
-            // Check if camera API is supported
             if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
                 statusDiv.textContent = 'Error: Camera access not supported in this browser.';
                 return;
@@ -165,12 +149,8 @@
 
             try {
                 const constraints = {
-                    video: {
-                        width: 640,
-                        height: 480
-                    }
+                    video: { width: 640, height: 480 }
                 };
-
                 const stream = await navigator.mediaDevices.getUserMedia(constraints);
                 video.srcObject = stream;
 
@@ -179,9 +159,9 @@
                     video.style.display = 'none';
                     startBtn.disabled = true;
                     stopBtn.disabled = false;
-                    modelSelect.disabled = true;
+                    exerciseSelect.disabled = true;
                     isRunning = true;
-                    statusDiv.textContent = 'Camera started. Detecting poses...';
+                    statusDiv.textContent = `Camera started. Detecting ${exercise}...`;
                     detectPose();
                 };
             } catch (error) {
@@ -204,19 +184,95 @@
 
             startBtn.disabled = false;
             stopBtn.disabled = true;
-            modelSelect.disabled = false;
+            exerciseSelect.disabled = false;
             isRunning = false;
+            repCount = 0;
+            prevState = null;
+            counterDiv.textContent = 'Reps: 0';
             statusDiv.textContent = 'Camera stopped.';
 
-            // Clear the canvas
             ctx.clearRect(0, 0, canvas.width, canvas.height);
         }
 
-        // Change the pose detection model
-        async function changeModel() {
-            model = modelSelect.value;
-            await loadModel();
-            statusDiv.textContent = `${model} model loaded. Click "Start Camera" to begin.`;
+        // Change the exercise
+        function changeExercise() {
+            exercise = exerciseSelect.value;
+            repCount = 0;
+            prevState = null;
+            counterDiv.textContent = 'Reps: 0';
+            statusDiv.textContent = `Selected ${exercise}. Click "Start Camera" to begin.`;
+        }
+
+        // Calculate angle between three points
+        function calculateAngle(p1, p2, p3) {
+            const vector1 = { x: p1.x - p2.x, y: p1.y - p2.y };
+            const vector2 = { x: p3.x - p2.x, y: p3.y - p2.y };
+            const dotProduct = vector1.x * vector2.x + vector1.y * vector2.y;
+            const magnitude1 = Math.sqrt(vector1.x ** 2 + vector1.y ** 2);
+            const magnitude2 = Math.sqrt(vector2.x ** 2 + vector2.y ** 2);
+            const cosTheta = dotProduct / (magnitude1 * magnitude2);
+            return Math.acos(Math.max(-1, Math.min(1, cosTheta))) * (180 / Math.PI);
+        }
+
+        // Detect exercise and count reps
+        function detectExercise(pose) {
+            const keypointMap = {};
+            pose.keypoints.forEach(keypoint => {
+                keypointMap[keypoint.part] = keypoint;
+            });
+
+            const requiredKeypoints = [
+                keypointMap.leftShoulder, keypointMap.rightShoulder,
+                keypointMap.leftElbow, keypointMap.rightElbow,
+                keypointMap.leftWrist, keypointMap.rightWrist,
+                keypointMap.leftHip, keypointMap.rightHip,
+                keypointMap.leftKnee, keypointMap.rightKnee
+            ];
+
+            if (requiredKeypoints.some(kp => !kp || kp.score < 0.3)) {
+                return null;
+            }
+
+            let state = null;
+
+            if (exercise === 'pushups') {
+                const shoulderY = (keypointMap.leftShoulder.y + keypointMap.rightShoulder.y) / 2;
+                const elbowAngle = calculateAngle(
+                    keypointMap.leftShoulder, keypointMap.leftElbow, keypointMap.leftWrist
+                );
+                state = shoulderY > 300 && elbowAngle < 100 ? 'down' : 'up';
+            } else if (exercise === 'situps') {
+                const hip = keypointMap.leftHip;
+                const shoulder = keypointMap.leftShoulder;
+                const knee = keypointMap.leftKnee;
+                const torsoAngle = calculateAngle(shoulder, hip, knee);
+                state = torsoAngle < 60 ? 'up' : 'down';
+            } else if (exercise === 'starjumps') {
+                const wristDistance = Math.abs(keypointMap.leftWrist.x - keypointMap.rightWrist.x);
+                const ankleDistance = Math.abs(keypointMap.leftAnkle.x - keypointMap.rightAnkle.x);
+                state = wristDistance > 400 && ankleDistance > 400 ? 'open' : 'closed';
+            } else if (exercise === 'squats') {
+                const hipY = (keypointMap.leftHip.y + keypointMap.rightHip.y) / 2;
+                const kneeAngle = calculateAngle(
+                    keypointMap.leftHip, keypointMap.leftKnee, keypointMap.leftAnkle
+                );
+                state = hipY > 300 && kneeAngle < 100 ? 'down' : 'up';
+            }
+
+            if (prevState && state !== prevState) {
+                if (
+                    (exercise === 'pushups' && prevState === 'up' && state === 'down') ||
+                    (exercise === 'situps' && prevState === 'down' && state === 'up') ||
+                    (exercise === 'starjumps' && prevState === 'closed' && state === 'open') ||
+                    (exercise === 'squats' && prevState === 'up' && state === 'down')
+                ) {
+                    repCount++;
+                    counterDiv.textContent = `Reps: ${repCount}`;
+                }
+            }
+
+            prevState = state;
+            return state;
         }
 
         // Continuously detect poses
@@ -226,59 +282,49 @@
                 return;
             }
 
-            // Draw the video frame
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-            // Detect poses
             try {
                 const poses = await detector.estimatePoses(video);
-                statusDiv.textContent = `Detecting poses using ${model}... (${poses.length} poses detected)`;
-
-                // Draw the poses
-                drawPoses(poses);
+                if (poses.length > 0) {
+                    const state = detectExercise(poses[0]);
+                    drawPoses(poses);
+                    statusDiv.textContent = `Detecting ${exercise}... ${state ? `State: ${state}` : 'No clear pose detected'}`;
+                } else {
+                    statusDiv.textContent = `Detecting ${exercise}... No poses detected`;
+                }
             } catch (error) {
                 console.error('Error detecting poses:', error);
                 statusDiv.textContent = `Error detecting poses: ${error.message}`;
             }
 
-            // Continue detection loop
             rafId = requestAnimationFrame(detectPose);
         }
 
         // Draw detected poses on the canvas
         function drawPoses(poses) {
-            // Clear previous drawings
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-            // For each detected pose
             for (const pose of poses) {
-                // Draw keypoints
                 for (const keypoint of pose.keypoints) {
                     if (keypoint.score > 0.3) {
                         ctx.beginPath();
                         ctx.arc(keypoint.x, keypoint.y, 5, 0, 2 * Math.PI);
                         ctx.fillStyle = 'red';
                         ctx.fill();
-
-                        // Draw keypoint name
                         ctx.fillStyle = 'white';
                         ctx.font = '12px Arial';
-                        ctx.fillText(keypoint.name || keypoint.part || 'point', keypoint.x + 10, keypoint.y + 5);
+                        ctx.fillText(keypoint.part, keypoint.x + 10, keypoint.y + 5);
                     }
                 }
-
-                // Draw skeleton (if available)
                 if (pose.keypoints.length > 5) {
                     drawSkeleton(pose);
                 }
             }
         }
 
-        // Draw the skeleton connecting keypoints
+        // Draw the skeleton
         function drawSkeleton(pose) {
-            // Define connections for a human skeleton (adjusted for model compatibility)
-            const connections = model === 'posenet' ? [
+            const connections = [
                 ['nose', 'leftEye'], ['nose', 'rightEye'],
                 ['leftEye', 'leftEar'], ['rightEye', 'rightEar'],
                 ['nose', 'leftShoulder'], ['nose', 'rightShoulder'],
@@ -289,35 +335,13 @@
                 ['leftHip', 'rightHip'],
                 ['leftHip', 'leftKnee'], ['rightHip', 'rightKnee'],
                 ['leftKnee', 'leftAnkle'], ['rightKnee', 'rightAnkle']
-            ] : model === 'movenet' ? [
-                ['nose', 'left_eye'], ['nose', 'right_eye'],
-                ['left_eye', 'left_ear'], ['right_eye', 'right_ear'],
-                ['left_shoulder', 'right_shoulder'],
-                ['left_shoulder', 'left_elbow'], ['right_shoulder', 'right_elbow'],
-                ['left_elbow', 'left_wrist'], ['right_elbow', 'right_wrist'],
-                ['left_shoulder', 'left_hip'], ['right_shoulder', 'right_hip'],
-                ['left_hip', 'right_hip'],
-                ['left_hip', 'left_knee'], ['right_hip', 'right_knee'],
-                ['left_knee', 'left_ankle'], ['right_knee', 'right_ankle']
-            ] : [
-                // BlazePose has more keypoints; simplified connections
-                ['nose', 'left_eye_inner'], ['nose', 'right_eye_inner'],
-                ['left_shoulder', 'right_shoulder'],
-                ['left_shoulder', 'left_elbow'], ['right_shoulder', 'right_elbow'],
-                ['left_elbow', 'left_wrist'], ['right_elbow', 'right_wrist'],
-                ['left_shoulder', 'left_hip'], ['right_shoulder', 'right_hip'],
-                ['left_hip', 'right_hip'],
-                ['left_hip', 'left_knee'], ['right_hip', 'right_knee'],
-                ['left_knee', 'left_ankle'], ['right_knee', 'right_ankle']
             ];
 
-            // Create a map for fast keypoint lookup
             const keypointMap = {};
             pose.keypoints.forEach(keypoint => {
-                keypointMap[keypoint.name || keypoint.part] = keypoint;
+                keypointMap[keypoint.part] = keypoint;
             });
 
-            // Draw connections
             ctx.strokeStyle = 'green';
             ctx.lineWidth = 4;
 
