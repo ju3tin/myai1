@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exercise Counter with MediaPipe Pose</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            text-align: center;
+            background-color: #f5f5f5;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .input_video, .output_canvas {
+            margin-top: 10px;
+            border: 1px solid #ccc;
+        }
+        .control-panel {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f0f0f0;
+            border-radius: 5px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .loading {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 20px;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+        }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .loaded .loading {
+            opacity: 0;
+            transition: opacity 0.3s ease-out;
+        }
+        .logo {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            display: flex;
+            align-items: center;
+        }
+        .logo img {
+            height: 50px;
+        }
+        .title {
+            color: white;
+            margin-left: 10px;
+            font-size: 16px;
+        }
+        .shoutout {
+            margin-top: 10px;
+        }
+        button {
+            margin: 10px;
+            padding: 8px 16px;
+            background-color: #4285f4;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #3367d6;
+        }
+        select {
+            margin: 10px;
+            padding: 8px;
+            font-size: 16px;
+        }
+        #counter {
+            font-size: 24px;
+            font-weight: bold;
+            margin-top: 10px;
+            color: #d32f2f;
+        }
+    </style>
+    <!-- MediaPipe Pose and Utilities -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675479577/pose.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3.1640024814/camera_utils.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils@0.6.1686773119/control_utils.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils@0.3.1621277220/drawing_utils.js"></script>
+</head>
+<body>
+    <div class="container">
+        <video class="input_video" style="display: none;"></video>
+        <canvas class="output_canvas" width="1280" height="720"></canvas>
+        <div class="loading">
+            <div class="spinner"></div>
+            <div class="message">Loading</div>
+        </div>
+        <div class="control-panel">
+            <select id="exerciseSelect">
+                <option value="pushups">Push-ups</option>
+                <option value="situps">Sit-ups</option>
+                <option value="starjumps">Star Jumps</option>
+                <option value="squats">Squats</option>
+            </select>
+            <button id="startBtn">Start Camera</button>
+            <button id="stopBtn" disabled>Stop Camera</button>
+            <div id="counter">Reps: 0</div>
+        </div>
+        <a class="logo" href="https://github.com/baoanh1310/pose_demo" target="_blank">
+            <div style="display: flex; align-items: center;">
+                <img src="https://via.placeholder.com/50?text=Logo" alt="Logo" style="height: 50px;">
+                <span class="title">Group 02 - AI Project</span>
+            </div>
+        </a>
+        <div class="shoutout">
+            <a href="https://github.com/baoanh1310/pose_demo">Click here for more info</a>
+        </div>
+    </div>
+    <script>
+        // DOM elements
+        const videoElement = document.getElementsByClassName('input_video')[0];
+        const canvasElement = document.getElementsByClassName('output_canvas')[0];
+        const controlsElement = document.getElementsByClassName('control-panel')[0];
+        const startBtn = document.getElementById('startBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const exerciseSelect = document.getElementById('exerciseSelect');
+        const counterDiv = document.getElementById('counter');
+        const canvasCtx = canvasElement.getContext('2d');
+
+        // Exercise tracking variables
+        let exercise = 'pushups';
+        let repCount = 0;
+        let stage = null;
+        let camera = null;
+
+        // FPS control
+        class FPS {
+            constructor() {
+                this.frameTimes = [];
+                this.maxFrames = 20;
+            }
+            tick() {
+                const now = performance.now();
+                this.frameTimes.push(now);
+                if (this.frameTimes.length > this.maxFrames) {
+                    this.frameTimes.shift();
+                }
+                if (this.frameTimes.length === this.maxFrames) {
+                    const fps = Math.round(1000 / ((now - this.frameTimes[0]) / (this.maxFrames - 1)));
+                    document.getElementById('fps') && (document.getElementById('fps').textContent = `FPS: ${fps}`);
+                }
+            }
+        }
+        const fpsControl = new FPS();
+
+        // Hide spinner after loading
+        const spinner = document.querySelector('.loading');
+        spinner.ontransitionend = () => {
+            spinner.style.display = 'none';
+        };
+
+        // Calculate angle between three points
+        function calculateAngle(p1, p2, p3) {
+            const vector1 = { x: p1.x - p2.x, y: p1.y - p2.y };
+            const vector2 = { x: p3.x - p2.x, y: p3.y - p2.y };
+            const dotProduct = vector1.x * vector2.x + vector1.y * vector2.y;
+            const magnitude1 = Math.sqrt(vector1.x ** 2 + vector1.y ** 2);
+            const magnitude2 = Math.sqrt(vector2.x ** 2 + vector2.y ** 2);
+            const cosTheta = dotProduct / (magnitude1 * magnitude2);
+            return Math.acos(Math.max(-1, Math.min(1, cosTheta))) * (180 / Math.PI);
+        }
+
+        // Detect exercise and count reps
+        function detectExercise(landmarks) {
+            if (!landmarks) return null;
+
+            const keypointMap = {};
+            landmarks.forEach((landmark, index) => {
+                keypointMap[index] = landmark;
+            });
+
+            const requiredIndices = [
+                11, // left_shoulder
+                12, // right_shoulder
+                13, // left_elbow
+                14, // right_elbow
+                15, // left_wrist
+                16, // right_wrist
+                23, // left_hip
+                24, // right_hip
+                25, // left_knee
+                26, // right_knee
+                27, // left_ankle
+                28  // right_ankle
+            ];
+
+            if (requiredIndices.some(idx => !keypointMap[idx] || keypointMap[idx].visibility < 0.65)) {
+                return null;
+            }
+
+            let state = null;
+
+            if (exercise === 'pushups') {
+                const shoulderY = (keypointMap[11].y + keypointMap[12].y) / 2;
+                const elbowAngle = calculateAngle(keypointMap[11], keypointMap[13], keypointMap[15]);
+                state = shoulderY * 720 > 500 && elbowAngle < 100 ? 'down' : 'up';
+            } else if (exercise === 'situps') {
+                const hip = keypointMap[23];
+                const shoulder = keypointMap[11];
+                const knee = keypointMap[25];
+                const torsoAngle = calculateAngle(shoulder, hip, knee);
+                state = torsoAngle < 60 ? 'up' : 'down';
+            } else if (exercise === 'starjumps') {
+                const wristDistance = Math.abs(keypointMap[15].x - keypointMap[16].x) * 1280;
+                const ankleDistance = Math.abs(keypointMap[27].x - keypointMap[28].x) * 1280;
+                state = wristDistance > 500 && ankleDistance > 500 ? 'open' : 'closed';
+            } else if (exercise === 'squats') {
+                const hipY = (keypointMap[23].y + keypointMap[24].y) / 2;
+                const kneeAngle = calculateAngle(keypointMap[23], keypointMap[25], keypointMap[27]);
+                state = hipY * 720 > 500 && kneeAngle < 100 ? 'down' : 'up';
+            }
+
+            if (stage && state !== stage) {
+                if (
+                    (exercise === 'pushups' && stage === 'up' && state === 'down') ||
+                    (exercise === 'situps' && stage === 'down' && state === 'up') ||
+                    (exercise === 'starjumps' && stage === 'closed' && state === 'open') ||
+                    (exercise === 'squats' && stage === 'up' && state === 'down')
+                ) {
+                    repCount++;
+                    counterDiv.textContent = `Reps: ${repCount}`;
+                }
+            }
+
+            stage = state;
+            return state;
+        }
+
+        // Handle pose detection results
+        function onResults(results) {
+            document.body.classList.add('loaded');
+            fpsControl.tick();
+
+            canvasCtx.save();
+            canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+            canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
+
+            if (results.poseLandmarks) {
+                drawConnectors(canvasCtx, results.poseLandmarks, POSE_CONNECTIONS, {
+                    visibilityMin: 0.65,
+                    color: 'white'
+                });
+                drawLandmarks(
+                    canvasCtx,
+                    results.poseLandmarks.filter((_, i) => [
+                        POSE_LANDMARKS.LEFT_SHOULDER,
+                        POSE_LANDMARKS.LEFT_ELBOW,
+                        POSE_LANDMARKS.LEFT_WRIST,
+                        POSE_LANDMARKS.LEFT_HIP,
+                        POSE_LANDMARKS.LEFT_KNEE,
+                        POSE_LANDMARKS.LEFT_ANKLE
+                    ].includes(i)),
+                    { visibilityMin: 0.65, color: 'white', fillColor: 'rgb(255,138,0)' }
+                );
+                drawLandmarks(
+                    canvasCtx,
+                    results.poseLandmarks.filter((_, i) => [
+                        POSE_LANDMARKS.RIGHT_SHOULDER,
+                        POSE_LANDMARKS.RIGHT_ELBOW,
+                        POSE_LANDMARKS.RIGHT_WRIST,
+                        POSE_LANDMARKS.RIGHT_HIP,
+                        POSE_LANDMARKS.RIGHT_KNEE,
+                        POSE_LANDMARKS.RIGHT_ANKLE
+                    ].includes(i)),
+                    { visibilityMin: 0.65, color: 'white', fillColor: 'rgb(0,217,231)' }
+                );
+                drawLandmarks(
+                    canvasCtx,
+                    results.poseLandmarks.filter((_, i) => [
+                        POSE_LANDMARKS.NOSE,
+                        POSE_LANDMARKS.LEFT_EYE,
+                        POSE_LANDMARKS.RIGHT_EYE,
+                        POSE_LANDMARKS.LEFT_EAR,
+                        POSE_LANDMARKS.RIGHT_EAR
+                    ].includes(i)),
+                    { visibilityMin: 0.65, color: 'white', fillColor: 'white' }
+                );
+
+                const state = detectExercise(results.poseLandmarks);
+                canvasCtx.font = '30px Arial';
+                canvasCtx.fillStyle = 'red';
+                canvasCtx.fillText(`${exercise}: ${stage || 'Unknown'} - Reps: ${repCount}`, 50, 50);
+            } else {
+                canvasCtx.font = '30px Arial';
+                canvasCtx.fillStyle = 'red';
+                canvasCtx.fillText('No pose detected', 50, 50);
+            }
+
+            canvasCtx.restore();
+        }
+
+        // Initialize MediaPipe Pose
+        const pose = new Pose({
+            locateFile: (file) => {
+                return `https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675479577/${file}`;
+            }
+        });
+        pose.setOptions({
+            selfieMode: true,
+            modelComplexity: 0, // Lite model for performance
+            smoothLandmarks: true,
+            minDetectionConfidence: 0.5,
+            minTrackingConfidence: 0.5
+        });
+        pose.onResults(onResults);
+
+        // Start camera
+        async function startCamera() {
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                controlsElement.textContent = 'Error: Camera access not supported in this browser.';
+                return;
+            }
+
+            try {
+                camera = new Camera(videoElement, {
+                    onFrame: async () => {
+                        await pose.send({ image: videoElement });
+                    },
+                    width: 1280,
+                    height: 720
+                });
+                await camera.start();
+                startBtn.disabled = true;
+                stopBtn.disabled = false;
+                exerciseSelect.disabled = true;
+                controlsElement.textContent = `Detecting ${exercise}...`;
+            } catch (error) {
+                controlsElement.textContent = `Error accessing camera: ${error.message}`;
+                console.error(error);
+            }
+        }
+
+        // Stop camera
+        function stopCamera() {
+            if (camera) {
+                camera.stop();
+                camera = null;
+            }
+            startBtn.disabled = false;
+            stopBtn.disabled = true;
+            exerciseSelect.disabled = false;
+            repCount = 0;
+            stage = null;
+            counterDiv.textContent = 'Reps: 0';
+            controlsElement.textContent = 'Camera stopped. Select an exercise and start again.';
+            canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+        }
+
+        // Change exercise
+        function changeExercise() {
+            exercise = exerciseSelect.value;
+            repCount = 0;
+            stage = null;
+            counterDiv.textContent = 'Reps: 0';
+            controlsElement.textContent = `Selected ${exercise}. Click "Start Camera" to begin.`;
+        }
+
+        // Event listeners
+        startBtn.addEventListener('click', startCamera);
+        stopBtn.addEventListener('click', stopCamera);
+        exerciseSelect.addEventListener('change', changeExercise);
+
+        // Initial message
+        controlsElement.textContent = 'Select an exercise and click "Start Camera" to begin.';
+    </script>
+</body>
+</html>
