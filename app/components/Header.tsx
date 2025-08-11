@@ -278,7 +278,6 @@ export default function Header() {
               >
                 <a
                   href="/index4.html"
-                  target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-2 py-2"
                 >
